@@ -1,0 +1,21 @@
+{
+  "name": "p2pweb",
+  "description": "A p2p take on the web",
+  "version": "0.0.0",
+  "author": {
+    "name": "Austin Middleton",
+    "email": "austinmid@utexas.edu"
+  },
+  "license": "MIT",
+  "main": "./src/index",
+  "scripts": {
+    "start": "nodejs ./src/index.js"
+  },
+  "dependencies": {
+    "webrtcsupport": "^2.1.2",
+    "express": "^4.13.3",
+    "mocha": "^2.3.4",
+    "socket.io": "^1.3.5",
+    "socket.io-client": "^1.3.5"
+  }
+}
