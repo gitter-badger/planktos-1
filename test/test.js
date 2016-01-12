@@ -1,6 +1,6 @@
 var assert = require('assert');
 var Q = require('q');
-var client = require('../src/client');
+var client = require('../lib/client');
 
 var randomString = function() {
   return "" + Math.round(Math.random() * 9999999999);
