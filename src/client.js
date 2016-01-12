@@ -18,6 +18,16 @@ socket.on('onPulledBlock', function (data) {
   defers[data.id].resolve(data.block);
 });
 
+socket.on('onPulledBoards', function (data) {
+  console.log('onPulledBoards', data);
+  defers[data.id].resolve(data.boards);
+});
+
+socket.on('onDeletedBoard', function (data) {
+  console.log('onDeletedBoard', data);
+  defers[data.id].resolve();
+});
+
 var generateId = function() {
   return "" + Math.round(Math.random() * 9999999999);
 };
@@ -58,5 +68,24 @@ exports.pushBlock = function(board, data) {
   var deferred = Q.defer();
   defers[req.id] = deferred;
   socket.emit('pushBlock', req);
+  return deferred.promise;
+};
+
+exports.pullBoards = function() {
+  var req = { 'id': generateId() };
+  var deferred = Q.defer();
+  defers[req.id] = deferred;
+  socket.emit('pullBoards', req);
+  return deferred.promise;
+};
+
+exports.deleteBoard = function(board) {
+  var req = {
+    'id': generateId(),
+    'board': board
+  };
+  var deferred = Q.defer();
+  defers[req.id] = deferred;
+  socket.emit('deleteBoard', req);
   return deferred.promise;
 };

@@ -8,6 +8,22 @@ var randomString = function() {
 
 describe('test basic block push/pull', function() {
 
+  var removeAllBoards = function() {
+    client.pullBoards()
+    .then((boards) => {
+      return Q.all(boards.map(client.deleteBoard));
+    })
+    .done();
+  };
+
+  before(function() {
+    removeAllBoards();
+  });
+
+  after(function() {
+    removeAllBoards();
+  });
+
   it('empty board should have no block hashes', function(done) {
     client.pullBlockHashes(randomString())
     .then(function(hashes) {
@@ -55,6 +71,17 @@ describe('test basic block push/pull', function() {
         blockData.splice(blockData.indexOf(block.data), 1);
       });
       assert(blockData.length == 0);
+      done();
+    })
+    .done();
+  });
+
+  it('pull boards contains newly created board', function(done) {
+    var board = randomString();
+    client.pushBlock(board, "foo bar")
+    .then(() => { return client.pullBoards(); })
+    .then(function(boards) {
+      assert(boards.indexOf(board) != -1);
       done();
     })
     .done();

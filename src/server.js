@@ -29,6 +29,15 @@ io.on('connection', function(socket){
         socket.emit('onPulledBlock', resp);
     });
 
+    socket.on('pullBoards', function(data) {
+        console.log("pullBoards", data);
+        var resp = {
+          'boards': Object.keys(boards),
+          'id': data.id
+        };
+        socket.emit('onPulledBoards', resp);
+    });
+
     socket.on('pushBlock', function(data) {
         console.log("pushBlock", data);
         if (!(data.board in boards))
@@ -36,6 +45,12 @@ io.on('connection', function(socket){
         boards[data.board].push(data.block.hash);
         blocks[data.block.hash] = data.block;
         socket.emit('onPushedBlock', {"id": data.id});
+    });
+
+    socket.on('deleteBoard', function(data) {
+        console.log("deleteBoard", data);
+        delete boards[data.board];
+        socket.emit('onDeletedBoard', {"id": data.id});
     });
 
 });
