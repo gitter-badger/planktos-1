@@ -9,13 +9,16 @@
   "license": "MIT",
   "main": "./src/index",
   "scripts": {
-    "start": "nodejs ./src/index.js"
+    "start": "node ./src/server.js",
+    "test": "./node_modules/mocha/bin/mocha"
   },
   "dependencies": {
-    "webrtcsupport": "^2.1.2",
+    "browserify": "^13.0.0",
     "express": "^4.13.3",
     "mocha": "^2.3.4",
+    "q": "^1.4.1",
     "socket.io": "^1.3.5",
-    "socket.io-client": "^1.3.5"
+    "socket.io-client": "^1.3.5",
+    "webrtcsupport": "^2.1.2"
   }
 }
