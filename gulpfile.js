@@ -10,11 +10,13 @@ gulp.task('clean', function() {
 });
 
 gulp.task('copy', function() {
-  return gulp.src('app/**/*').pipe(gulp.dest('build'));
+  gulp.src('bower_components/**/*.{js,css}').pipe(gulp.dest('build/bower_components'));
+  gulp.src('app/**/*').pipe(gulp.dest('build'));
 });
 
 gulp.task('browserify', function() {
-  return browserify('./lib/client.js')
+  return browserify()
+  .require('./lib/client.js', { expose: 'client' })
   .bundle()
   .pipe(source('clientbundle.js'))
   .pipe(gulp.dest('./build/js'));

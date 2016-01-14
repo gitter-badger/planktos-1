@@ -1,0 +1,24 @@
+{
+  "name": "p2pweb",
+  "description": "A p2p take on the web",
+  "main": "./src/index",
+  "authors": [
+    "Austin Middleton"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/xuset/p2pweb",
+  "moduleType": [
+    "node"
+  ],
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular-material": "~1.0.1"
+  }
+}
