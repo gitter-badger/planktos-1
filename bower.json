@@ -19,6 +19,8 @@
     "tests"
   ],
   "dependencies": {
-    "angular-material": "~1.0.1"
+    "angular-material": "~1.0.1",
+    "polymer": "Polymer/polymer#^1.2.0",
+    "angular-route": "~1.4.8"
   }
 }
