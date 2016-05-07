@@ -17,4 +17,10 @@ angular.module('app', ['ngMaterial'])
     $timeout();
   });
 
+  client.peerWatchers.push(function() {
+    client.pullBlocks();
+  });
+
+  client.findPeers();
+
 }]);
