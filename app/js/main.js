@@ -3,9 +3,9 @@
 var Client = require('client');
 
 angular.module('app', ['ngMaterial'])
-.controller('mainCtrl', ['$scope', '$timeout', '$window', ($scope, $timeout, $window) => {
+.controller('mainCtrl', ['$scope', '$timeout', ($scope, $timeout) => {
 
-  var client = new Client($window.location.toString());
+  var client = new Client();
 
   $scope.blocks = client.blocks;
 
@@ -24,6 +24,6 @@ angular.module('app', ['ngMaterial'])
     client.pullBlocks();
   });
 
-  client.findPeers();
+  client.connect();
 
 }]);
