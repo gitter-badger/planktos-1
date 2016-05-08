@@ -1,7 +1,11 @@
-const client = require('client');
+"use strict";
+
+var Client = require('client');
 
 angular.module('app', ['ngMaterial'])
-.controller('mainCtrl', ['$scope', '$timeout', ($scope, $timeout) => {
+.controller('mainCtrl', ['$scope', '$timeout', '$window', ($scope, $timeout, $window) => {
+
+  var client = new Client($window.location.toString());
 
   $scope.blocks = client.blocks;
 
@@ -13,7 +17,6 @@ angular.module('app', ['ngMaterial'])
   };
 
   client.blockWatchers.push(function() {
-    console.log("CHANGE");
     $timeout();
   });
 
