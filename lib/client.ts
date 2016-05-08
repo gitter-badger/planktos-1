@@ -1,3 +1,4 @@
+/// <reference path="node.d.ts" />
 "use strict";
 
 var socketio = require('socket.io-client');

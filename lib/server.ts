@@ -1,3 +1,4 @@
+/// <reference path="node.d.ts" />
 "use strict";
 
 var express = require('express');
@@ -6,7 +7,7 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var port = 8000;
 
-app.use(express.static(__dirname + '/../build'));
+app.use(express.static(__dirname + '/../app'));
 
 var findPeers = function(data, peerId) {
   var peerList = Object.keys(peers);
