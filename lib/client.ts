@@ -1,9 +1,8 @@
-/// <reference path="node.d.ts" />
 "use strict";
 
 var socketio = require('socket.io-client');
 
-var Client = function(masterUrl) {
+var Client = function(masterUrl?: string) {
   this.peers = [];
   this.blocks = [];
   this.blockWatchers = [];
@@ -11,10 +10,10 @@ var Client = function(masterUrl) {
   this._socket = null;
 };
 
-Client.prototype.connect = function(masterUrl) {
+Client.prototype.connect = function(masterUrl: string) {
   var client = this;
   this._socket = socketio.connect(masterUrl);
-  this._socket.on('message', function(msg) {
+  this._socket.on('message', function(msg: string) {
     onSocketioMessage(client, msg);
   });
 
@@ -31,7 +30,7 @@ Client.prototype.getId = function() {
   return this._socket.id;
 };
 
-Client.prototype._sendServerRequest = function(method, reqData) {
+Client.prototype._sendServerRequest = function(method: string, reqData: any) {
   var request = {
     'method': method,
     'data': reqData
@@ -46,7 +45,7 @@ Client.prototype.findPeers = function() {
     this._sendServerRequest('findPeers', {});
 };
 
-Client.prototype._onPeerMessageRecv = function(peerId, data) {
+Client.prototype._onPeerMessageRecv = function(peerId: string, data: any) {
   console.log("P2P << ", peerId, data);
 
   if (data.type == "pullBlocks") {
@@ -58,7 +57,7 @@ Client.prototype._onPeerMessageRecv = function(peerId, data) {
   }
 };
 
-Client.prototype._sendPeerMessage = function(peerId, type, message) {
+Client.prototype._sendPeerMessage = function(peerId: string, type: string, message: any) {
   var data = {
     peerId: peerId,
     data: {
@@ -70,20 +69,20 @@ Client.prototype._sendPeerMessage = function(peerId, type, message) {
   this._sendServerRequest ('relayToPeer', data);
 };
 
-Client.prototype.pushBlock = function(content) {
+Client.prototype.pushBlock = function(content: any) {
   this.blocks.push(content);
-  this.peers.forEach((peerId) => {
+  this.peers.forEach((peerId: string) => {
     this._sendPeerMessage(peerId, "pushBlocks", [ content ]);
   });
 };
 
 Client.prototype.pullBlocks = function() {
-  this.peers.forEach((peerId) => {
+  this.peers.forEach((peerId: string) => {
     this._sendPeerMessage(peerId, "pullBlocks", {});
   });
 };
 
-var onSocketioMessage = function(client, response) {
+var onSocketioMessage = function(client: any, response: any) {
   console.log('RECV', response);
   if (response.method == 'relayToPeer') {
     client._onPeerMessageRecv(response.result.peerId, response.result.data);
@@ -97,13 +96,13 @@ var onSocketioMessage = function(client, response) {
 };
 
 
-var notifyWatchers = function(watchList) {
-  watchList.forEach(function(w) {
+var notifyWatchers = function(watchList: Array<any>) {
+  watchList.forEach(function(w: any) {
     w();
   });
 };
 
-var mergeInto = function(listA, listB) {
+var mergeInto = function(listA: Array<any>, listB: Array<any>) {
   listB.forEach(function(e) {
     if (listA.indexOf(e) === -1)
       listA.push(e);

@@ -9,13 +9,13 @@ var port = 8000;
 
 app.use(express.static(__dirname + '/../app'));
 
-var findPeers = function(data, peerId) {
+var findPeers = function(data: any, peerId: string) {
   var peerList = Object.keys(peers);
   peerList.splice(peerList.indexOf(peerId), 1);
   return peerList;
 };
 
-var relayToPeer = function(data, peerId) {
+var relayToPeer = function(data: any, peerId: string) {
   if (io.sockets.connected[data.peerId]) {
     var relayData = {
       method: 'relayToPeer',
@@ -29,20 +29,20 @@ var relayToPeer = function(data, peerId) {
   }
 };
 
-var rpcMap = {
+var rpcMap: any = {
     findPeers: findPeers,
     relayToPeer: relayToPeer
 };
 
-var peers = {};
+var peers: any = {};
 
-io.on('connection', function(socket){
+io.on('connection', function(socket: any){
 
   peers[socket.id] = true;
 
   socket.broadcast.send({method: 'newPeer', result: {peerId: socket.id}});
 
-  socket.on('message', function(request) {
+  socket.on('message', function(request: any) {
     console.log("Received request", request.method, request.data);
     var result = rpcMap[request.method](request.data, socket.id);
     if (typeof(result) != "undefined") {

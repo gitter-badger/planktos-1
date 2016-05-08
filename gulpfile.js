@@ -18,7 +18,8 @@ gulp.task('copy', function() {
 gulp.task('make', function() {
   return gulp.src('lib/**/*.ts')
     .pipe(ts({
-      outDir: 'build/lib'
+      outDir: 'build/lib',
+      noImplicitAny: true
     }))
     .pipe(gulp.dest('build/lib'));
 });
