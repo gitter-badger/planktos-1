@@ -3,7 +3,7 @@ var source = require('vinyl-source-stream');
 var gulp = require('gulp');
 var ts = require('gulp-typescript');
 var clean = require('gulp-clean');
-var supervisor = require('supervisor');
+var nodemon = require('gulp-nodemon');
 
 
 gulp.task('clean', function() {
@@ -34,7 +34,7 @@ gulp.task('browserify', ['make'], function() {
 gulp.task('serve', ['build'], function() {
   gulp.watch('lib/**/*.ts', ['build']);
   gulp.watch('app/**/*', ['build']);
-  supervisor.run(["-w", "build/lib", "build/lib/server.js"]);
+  nodemon({ script: 'build/lib/server.js', watch: 'build/lib' });
 });
 
 gulp.task('build', ['make', 'copy', 'browserify']);
