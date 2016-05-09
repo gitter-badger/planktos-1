@@ -6,9 +6,10 @@ First, nodejs and npm will need to be installed. Most of the time npm installed 
 
 Installing all the dependcies can be done inside the project root with:
 ```
-npm install -g gulp bower
+npm install -g gulp bower typings
 npm install
 bower install
+typings install
 ```
 
 ## Building

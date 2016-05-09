@@ -16,7 +16,7 @@ gulp.task('copy', function() {
 });
 
 gulp.task('make', function() {
-  return gulp.src('lib/**/*.ts')
+  return gulp.src(['lib/**/*.ts', 'typings/main.d.ts'])
     .pipe(ts({
       outDir: 'build/lib',
       noImplicitAny: true

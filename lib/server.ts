@@ -1,10 +1,13 @@
-/// <reference path="node.d.ts" />
 "use strict";
 
-var express = require('express');
+import * as socketio from 'socket.io';
+import * as http from 'http';
+import * as express from 'express';
+
 var app = express();
-var http = require('http').Server(app);
-var io = require('socket.io')(http);
+var server = http.createServer(app);
+var io = socketio(server);
+
 var port = 8000;
 
 app.use(express.static(__dirname + '/../app'));
@@ -62,7 +65,7 @@ io.on('connection', function(socket: any){
 });
 
 exports.startServer = function() {
-  http.listen(port, function(){
+  server.listen(port, function(){
     console.log('listening on *:' + port);
   });
 };

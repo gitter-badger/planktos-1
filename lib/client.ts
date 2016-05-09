@@ -1,6 +1,6 @@
 "use strict";
 
-var socketio = require('socket.io-client');
+import * as socketio from 'socket.io-client';
 
 var Client = function(masterUrl?: string) {
   this.peers = [];
