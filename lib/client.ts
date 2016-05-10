@@ -1,112 +1,110 @@
-"use strict";
-
 import * as socketio from 'socket.io-client';
 
-var Client = function(masterUrl?: string) {
-  this.peers = [];
-  this.blocks = [];
-  this.blockWatchers = [];
-  this.peerWatchers = [];
-  this._socket = null;
-};
+type Watcher = ()=>void;
 
-Client.prototype.connect = function(masterUrl: string) {
-  var client = this;
-  this._socket = socketio.connect(masterUrl);
-  this._socket.on('message', function(msg: string) {
-    onSocketioMessage(client, msg);
-  });
+interface Peer {
+  id: string;
+}
 
-  this.findPeers();
-};
+interface Block {
+  content: any;
+}
 
-Client.prototype.disconnect = function() {
-  this._socket.disconnect();
-  this._socket = null;
-  this.peers = [];
-};
+export default class Client {
+  peers: Peer[] = [];
+  blocks: Block[] = [];
+  blockWatchers: Watcher[] = [];
+  peerWatchers: Watcher[] = [];
 
-Client.prototype.getId = function() {
-  return this._socket.id;
-};
+  private socket: SocketIOClient.Socket = null;
 
-Client.prototype._sendServerRequest = function(method: string, reqData: any) {
-  var request = {
-    'method': method,
-    'data': reqData
-  };
-
-  console.log("SEND", request);
-
-  this._socket.send(request);
-};
-
-Client.prototype.findPeers = function() {
-    this._sendServerRequest('findPeers', {});
-};
-
-Client.prototype._onPeerMessageRecv = function(peerId: string, data: any) {
-  console.log("P2P << ", peerId, data);
-
-  if (data.type == "pullBlocks") {
-    this._sendPeerMessage(peerId, "pushBlocks", this.blocks);
-    notifyWatchers (this.blockWatchers);
-  } else if (data.type == "pushBlocks") {
-    mergeInto (this.blocks, data.message);
-    notifyWatchers (this.blockWatchers);
+  connect(masterUrl?: string) {
+    var client = this;
+    this.socket = socketio.connect(masterUrl);
+    this.socket.on('message', (msg: any) => this.onSocketioMessage(msg));
+    this.findPeers();
   }
-};
 
-Client.prototype._sendPeerMessage = function(peerId: string, type: string, message: any) {
-  var data = {
-    peerId: peerId,
-    data: {
-      type: type,
-      message: message
+  disconnect() {
+    this.socket.disconnect();
+    this.socket = null;
+    this.peers = [];
+  }
+
+  getId(): string {
+    return this.socket.id;
+  }
+
+  findPeers() {
+      this.sendServerRequest('findPeers', {});
+  }
+
+  pushBlock(content: any) {
+    let block: Block = {content: content};
+    this.blocks.push(block);
+    this.peers.forEach((peer) => {
+      this.sendPeerMessage(peer, "pushBlocks", [ block ]);
+    });
+  }
+
+  pullBlocks() {
+    this.peers.forEach((peer) => {
+      this.sendPeerMessage(peer, "pullBlocks", {});
+    });
+  }
+
+  private sendServerRequest(method: string, reqData: any) {
+    let request = {
+      'method': method,
+      'data': reqData
+    };
+
+    console.log("SEND", request);
+
+    this.socket.send(request);
+  }
+
+  private onPeerMessageRecv(peer: Peer, data: any) {
+    console.log("P2P Rcv ", peer.id, data);
+
+    if (data.type == "pullBlocks") {
+      this.sendPeerMessage(peer, "pushBlocks", this.blocks);
+      this.blockWatchers.forEach((f) => f());
+    } else if (data.type == "pushBlocks") {
+      mergeInto (this.blocks, data.message);
+      this.blockWatchers.forEach((f) => f());
     }
-  };
-  console.log("P2P >> ", peerId, data.data.type, data.data.message);
-  this._sendServerRequest ('relayToPeer', data);
-};
-
-Client.prototype.pushBlock = function(content: any) {
-  this.blocks.push(content);
-  this.peers.forEach((peerId: string) => {
-    this._sendPeerMessage(peerId, "pushBlocks", [ content ]);
-  });
-};
-
-Client.prototype.pullBlocks = function() {
-  this.peers.forEach((peerId: string) => {
-    this._sendPeerMessage(peerId, "pullBlocks", {});
-  });
-};
-
-var onSocketioMessage = function(client: any, response: any) {
-  console.log('RECV', response);
-  if (response.method == 'relayToPeer') {
-    client._onPeerMessageRecv(response.result.peerId, response.result.data);
-  } else if (response.method == 'findPeers') {
-    mergeInto(client.peers, response.result);
-    notifyWatchers (client.peerWatchers);
-  } else if (response.method == 'newPeer') {
-    client.peers.push(response.result.peerId);
-    notifyWatchers (client.peerWatchers);
   }
-};
 
+  private sendPeerMessage(peer: Peer, type: string, message: any) {
+    var data = {
+      peerId: peer.id,
+      data: {
+        type: type,
+        message: message
+      }
+    };
+    console.log("P2P Send ", peer.id, data.data.type, data.data.message);
+    this.sendServerRequest ('relayToPeer', data);
+  }
 
-var notifyWatchers = function(watchList: Array<any>) {
-  watchList.forEach(function(w: any) {
-    w();
-  });
-};
+  private onSocketioMessage(response: any) {
+    console.log('RECV', response);
+    if (response.method == 'relayToPeer') {
+      this.onPeerMessageRecv({ id: response.result.peerId }, response.result.data);
+    } else if (response.method == 'findPeers') {
+      mergeInto(this.peers, response.result.map((p:string) => ({id: p})));
+      this.peerWatchers.forEach((f) => f());
+    } else if (response.method == 'newPeer') {
+      this.peers.push({ id: response.result.peerId });
+      this.peerWatchers.forEach((f) => f());
+    }
+  }
+}
 
-var mergeInto = function(listA: Array<any>, listB: Array<any>) {
+function mergeInto<T>(listA: T[], listB: T[]) {
   listB.forEach(function(e) {
     if (listA.indexOf(e) === -1)
       listA.push(e);
   });
 };
-
-module.exports = exports = Client;

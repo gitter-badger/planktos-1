@@ -1,6 +1,8 @@
 "use strict";
 
-var Client = require('client');
+var Client = require('client').default;
+
+console.log(Client);
 
 angular.module('app', ['ngMaterial'])
 .controller('mainCtrl', ['$scope', '$timeout', ($scope, $timeout) => {
