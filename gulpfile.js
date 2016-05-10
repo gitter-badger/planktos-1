@@ -5,6 +5,11 @@ var ts = require('gulp-typescript');
 var clean = require('gulp-clean');
 var nodemon = require('gulp-nodemon');
 
+var tsProject = ts.createProject({
+  outDir: 'build/lib',
+  noImplicitAny: true
+});
+
 
 gulp.task('clean', function() {
   return gulp.src('build', { 'read': false }).pipe(clean());
@@ -17,10 +22,7 @@ gulp.task('copy', function() {
 
 gulp.task('make', function() {
   return gulp.src(['lib/**/*.ts', 'typings/main.d.ts'])
-    .pipe(ts({
-      outDir: 'build/lib',
-      noImplicitAny: true
-    }))
+    .pipe(ts(tsProject))
     .pipe(gulp.dest('build/lib'));
 });
 
