@@ -1,75 +1,81 @@
-"use strict";
-
 import * as socketio from 'socket.io';
 import * as http from 'http';
 import * as express from 'express';
+import { Message } from './peer';
 
-var app = express();
-var server = http.createServer(app);
-var io = socketio(server);
+const app = express();
+const server = http.createServer(app);
+const io = socketio(server);
+const port = 8000;
+const peers: string[] = [];
 
-var port = 8000;
-
+// Serve static content from the `app`
 app.use(express.static(__dirname + '/../app'));
 
-var findPeers = function(data: any, peerId: string) {
-  var peerList = Object.keys(peers);
-  peerList.splice(peerList.indexOf(peerId), 1);
-  return peerList;
-};
+// When we receive a new connection/peer
+io.on('connection', (socket: SocketIO.Socket) => {
 
-var relayToPeer = function(data: any, peerId: string) {
-  if (io.sockets.connected[data.peerId]) {
-    var relayData = {
-      method: 'relayToPeer',
-      result: {
-        peerId: peerId,
-        data: data.data
-      }
-    };
-    console.log("RELAYED", relayData);
-    io.sockets.connected[data.peerId].send(relayData);
-  }
-};
+  // keep track of all the peers
+  peers.push(socket.id);
 
-var rpcMap: any = {
-    findPeers: findPeers,
-    relayToPeer: relayToPeer
-};
+  // Broadcast the peer's info to all other peers
+  const newPeerMsg: Message = {
+    type: 'newPeers',
+    content: [socket.id]
+  };
+  socket.broadcast.send(newPeerMsg);
 
-var peers: any = {};
+  socket.on('message', function(msg: Message) {
+    console.log("Received message", msg.type, msg.content);
 
-io.on('connection', function(socket: any){
-
-  peers[socket.id] = true;
-
-  socket.broadcast.send({method: 'newPeer', result: {peerId: socket.id}});
-
-  socket.on('message', function(request: any) {
-    console.log("Received request", request.method, request.data);
-    var result = rpcMap[request.method](request.data, socket.id);
-    if (typeof(result) != "undefined") {
-      var response = {
-        'method': request.method,
-        'result': result
-      };
-      console.log("Sending response", response.method, response.result);
-      socket.send(response);
+    if (msg.type == "findPeers") {
+      // The peer requested more peers
+      findPeers(socket);
+    } else if (msg.type == "relay") {
+      // The peer wants a message relayed to another
+      relayToPeer(socket, msg.content);
+    } else {
+      console.log("Unknown type", msg);
     }
   });
 
   socket.on('disconnect', function() {
-    delete peers[socket.id];
+    // Remove peer from list
+    peers.splice(peers.indexOf(socket.id), 1);
   });
 
 });
 
-exports.startServer = function() {
+function findPeers(socket: SocketIO.Socket) {
+  const peerList = peers.slice(); //Obtain a copy
+  peerList.splice(peerList.indexOf(socket.id), 1); // Remove peer
+  const msg: Message = {
+    type: 'newPeers',
+    content: peerList
+  };
+  socket.send(msg);
+};
+
+function relayToPeer(socket: SocketIO.Socket, content: any) {
+  if (io.sockets.connected[content.peerId]) {
+    const relayMsg: Message = {
+      type: 'relayToPeer',
+      content: {
+        peerId: socket.id,
+        msg: content.msg
+      }
+    };
+    console.log("RELAYED", relayMsg);
+    io.sockets.connected[content.peerId].send(relayMsg);
+  }
+};
+
+export function startServer() {
   server.listen(port, function(){
     console.log('listening on *:' + port);
   });
 };
 
 if (require.main === module) {
-  exports.startServer();
+  startServer();
 }

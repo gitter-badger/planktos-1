@@ -1,100 +1,53 @@
-import * as socketio from 'socket.io-client';
+import {MasterPeer, Peer, Message} from './peer';
 
 type Watcher = ()=>void;
 
-interface Peer {
-  id: string;
-}
-
 type Block = string;
 
+/* Main controller for p2p code */
 export default class Client {
-  peers: Peer[] = [];
   blocks: Block[] = [];
   blockWatchers: Watcher[] = [];
-  peerWatchers: Watcher[] = [];
+  master: MasterPeer = null;
 
-  private socket: SocketIOClient.Socket = null;
+  constructor() {
+    const onMessage = (peer: Peer, msg: Message) => {
+      this.onPeerMessage(peer, msg);
+    };
+    this.master = new MasterPeer(onMessage);
+  }
 
   connect(masterUrl?: string) {
-    var client = this;
-    this.socket = socketio.connect(masterUrl);
-    this.socket.on('message', (msg: any) => this.onSocketioMessage(msg));
-    this.findPeers();
+    this.master.connect(masterUrl);
   }
 
-  disconnect() {
-    this.socket.disconnect();
-    this.socket = null;
-    this.peers = [];
-  }
-
-  getId(): string {
-    return this.socket.id;
-  }
-
-  findPeers() {
-      this.sendServerRequest('findPeers', {});
-  }
-
+  /* Sends the block to every known peer */
   pushBlock(content: string) {
     this.blocks.push(content);
-    this.peers.forEach((peer) => {
-      this.sendPeerMessage(peer, "pushBlocks", [ content ]);
-    });
-  }
-
-  pullBlocks() {
-    this.peers.forEach((peer) => {
-      this.sendPeerMessage(peer, "pullBlocks", {});
-    });
-  }
-
-  private sendServerRequest(method: string, reqData: any) {
-    let request = {
-      'method': method,
-      'data': reqData
-    };
-
-    console.log("SEND", request);
-
-    this.socket.send(request);
-  }
-
-  private onPeerMessageRecv(peer: Peer, data: any) {
-    console.log("P2P Rcv ", peer.id, data);
-
-    if (data.type == "pullBlocks") {
-      this.sendPeerMessage(peer, "pushBlocks", this.blocks);
-      this.blockWatchers.forEach((f) => f());
-    } else if (data.type == "pushBlocks") {
-      mergeInto (this.blocks, data.message);
-      this.blockWatchers.forEach((f) => f());
+    for (const peerId in this.master.peers) {
+      const peer = this.master.peers[peerId];
+      peer.sendMessage("pushBlocks", [ content ]);
     }
   }
 
-  private sendPeerMessage(peer: Peer, type: string, message: any) {
-    var data = {
-      peerId: peer.id,
-      data: {
-        type: type,
-        message: message
-      }
-    };
-    console.log("P2P Send ", peer.id, data.data.type, data.data.message);
-    this.sendServerRequest ('relayToPeer', data);
+  /* Request from peers for them to send us their blocks */
+  pullBlocks() {
+    for (const peerId in this.master.peers) {
+      const peer = this.master.peers[peerId];
+      peer.sendMessage("pullBlocks", {});
+    }
   }
 
-  private onSocketioMessage(response: any) {
-    console.log('RECV', response);
-    if (response.method == 'relayToPeer') {
-      this.onPeerMessageRecv({ id: response.result.peerId }, response.result.data);
-    } else if (response.method == 'findPeers') {
-      mergeInto(this.peers, response.result.map((p:string) => ({id: p})));
-      this.peerWatchers.forEach((f) => f());
-    } else if (response.method == 'newPeer') {
-      this.peers.push({ id: response.result.peerId });
-      this.peerWatchers.forEach((f) => f());
+  private onPeerMessage(peer: Peer, msg: Message) {
+    console.log("P2P Rcv ", peer.id, msg, this);
+
+    if (msg.type == "pullBlocks") {
+      // Someone requrested our blocks, so send it to them
+      peer.sendMessage("pushBlocks", this.blocks);
+    } else if (msg.type == "pushBlocks") {
+      // We just received blocks so add them to ours
+      mergeInto (this.blocks, msg.content);
+      this.blockWatchers.forEach((f) => f());
     }
   }
 }

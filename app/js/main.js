@@ -8,6 +8,7 @@ angular.module('app', ['ngMaterial'])
 .controller('mainCtrl', ['$scope', '$timeout', ($scope, $timeout) => {
 
   var client = new Client();
+  client.connect();
 
   $scope.blocks = client.blocks;
 
@@ -22,10 +23,8 @@ angular.module('app', ['ngMaterial'])
     $timeout();
   });
 
-  client.peerWatchers.push(function() {
+  client.master.peerWatchers.push(function() {
     client.pullBlocks();
   });
-
-  client.connect();
 
 }]);
