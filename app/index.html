@@ -16,10 +16,10 @@
           <md-card-content>
             <md-list>
               <md-subheader class="md-no-sticky">Posts</md-subheader>
-              <div ng-repeat="block in blocks">
+              <div ng-repeat="block in blocks track by $index">
                 <md-list-item class="md-1-line">
                   <div class="md-list-item-text" layout="column">
-                    <p>{{ block.content }}</p>
+                    <p>{{ block }}</p>
                   </div>
                 </md-list-item>
                 <md-divider ng-hide="$last"></md-divider>

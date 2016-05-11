@@ -6,9 +6,7 @@ interface Peer {
   id: string;
 }
 
-interface Block {
-  content: any;
-}
+type Block = string;
 
 export default class Client {
   peers: Peer[] = [];
@@ -39,11 +37,10 @@ export default class Client {
       this.sendServerRequest('findPeers', {});
   }
 
-  pushBlock(content: any) {
-    let block: Block = {content: content};
-    this.blocks.push(block);
+  pushBlock(content: string) {
+    this.blocks.push(content);
     this.peers.forEach((peer) => {
-      this.sendPeerMessage(peer, "pushBlocks", [ block ]);
+      this.sendPeerMessage(peer, "pushBlocks", [ content ]);
     });
   }
 
