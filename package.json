@@ -9,7 +9,7 @@
   "license": "MIT",
   "main": "./src/index",
   "scripts": {
-    "start": "node ./lib/server.js",
+    "start": "node ./build/lib/server.js",
     "test": "./node_modules/mocha/bin/mocha"
   },
   "dependencies": {

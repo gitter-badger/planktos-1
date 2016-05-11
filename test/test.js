@@ -1,90 +1,46 @@
-var assert = require('assert');
-var Q = require('q');
-var client = require('../lib/client');
+const assert = require('assert');
+const Client = require('../build/lib/client').default;
+const masterUrl = "http://localhost:8000/";
 
-var randomString = function() {
-  return "" + Math.round(Math.random() * 9999999999);
-}
+describe('sanity tests', function() {
 
-describe('test basic block push/pull', function() {
+  it('basic block push', function(done) {
+    const clientA = new Client();
+    const clientB = new Client();
 
-  var removeAllBoards = function() {
-    client.pullBoards()
-    .then((boards) => {
-      return Q.all(boards.map(client.deleteBoard));
-    })
-    .done();
-  };
+    function onNewPeer(peer) {
+      const peersA = Object.keys(clientA.master.peers);
+      const peersB = Object.keys(clientB.master.peers);
+      const numPeers = peersA.length + peersB.length;
 
-  before(function() {
-    removeAllBoards();
+      //TODO Sometime peers from previous tests will linger
+      //causing the assert below to fail
+      assert (peersA.length <= 1 && peersB.length <= 1);
+      if (peersA.length == 1 && peersB.length == 1) {
+        assert(peersA[0].indexOf(clientB.master.id) !== -1);
+        assert(peersB[0].indexOf(clientA.master.id) !== -1);
+        clientA.pushBlock("A");
+        clientB.pushBlock("B");
+      }
+    }
+
+    function onNewBlock() {
+      assert(clientA.blocks.length <= 2 && clientB.blocks.length <= 2);
+      if (clientA.blocks.length == 2 && clientB.blocks.length == 2) {
+        assert(clientA.blocks.indexOf("A") !== -1);
+        assert(clientA.blocks.indexOf("B") !== -1);
+        assert(clientB.blocks.indexOf("A") !== -1);
+        assert(clientB.blocks.indexOf("B") !== -1);
+        done();
+      }
+    }
+
+    clientA.master.peerWatchers.push(onNewPeer);
+    clientB.master.peerWatchers.push(onNewPeer);
+    clientA.blockWatchers.push(onNewBlock);
+    clientB.blockWatchers.push(onNewBlock);
+
+    clientA.connect(masterUrl);
+    clientB.connect(masterUrl);
   });
-
-  after(function() {
-    removeAllBoards();
-  });
-
-  it('empty board should have no block hashes', function(done) {
-    client.pullBlockHashes(randomString())
-    .then(function(hashes) {
-      assert(hashes.length == 0);
-      done();
-    })
-    .done();
-  });
-
-  it('simple push/pull', function(done) {
-    var board = randomString();
-    client.pushBlock(board, "hello")
-    .then(function() {
-      return client.pullBlockHashes(board);
-    })
-    .then(function(hashes) {
-      assert(hashes.length == 1);
-      return client.pullBlock(board, hashes[0]);
-    })
-    .then(function(block) {
-      assert(block.data == "hello");
-      done();
-    })
-    .done();
-  });
-
-  it('multiple pushes and pulls', function(done) {
-    var board = randomString();
-    var blockData = ["hello", "something", "bye"];
-    Q.all(blockData.map(function(data) {
-      return client.pushBlock(board, data);
-    }))
-    .then(function() {
-      return client.pullBlockHashes(board);
-    })
-    .then(function(hashes) {
-      assert(hashes.length == 3);
-      return Q.all(hashes.map(function(hash) {
-        return client.pullBlock(board, hash);
-      }));
-    })
-    .then(function(blocks) {
-      blocks.forEach(function(block) {
-        assert(blockData.indexOf(block.data) != -1);
-        blockData.splice(blockData.indexOf(block.data), 1);
-      });
-      assert(blockData.length == 0);
-      done();
-    })
-    .done();
-  });
-
-  it('pull boards contains newly created board', function(done) {
-    var board = randomString();
-    client.pushBlock(board, "foo bar")
-    .then(() => { return client.pullBoards(); })
-    .then(function(boards) {
-      assert(boards.indexOf(board) != -1);
-      done();
-    })
-    .done();
-  });
-
 });
