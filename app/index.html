@@ -9,14 +9,14 @@
 <body ng-app="app" ng-controller="mainCtrl">
 
   <!-- BEGIN display blocks -->
-  <div ng-cloak ng-hide="blocks.length == 0">
+  <div ng-cloak ng-hide="getBlocks('').length == 0">
     <md-content layout="row" layout-wrap layout-align="center start" layout-xs="column">
       <div flex="50" flex-sm="100" flex-xs="100" layout="column">
         <md-card>
           <md-card-content>
             <md-list>
               <md-subheader class="md-no-sticky">Posts</md-subheader>
-              <div ng-repeat="block in blocks track by $index">
+              <div ng-repeat="block in getBlocks('')">
                 <md-list-item class="md-1-line">
                   <div class="md-list-item-text" layout="column">
                     <p>{{ block.content }}</p>

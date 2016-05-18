@@ -19,22 +19,31 @@ class Peer {
   }
 
   /* Requests that the peer store the given `blocks` */
-  pushBlocks(blocks: Block[]) {
-    this.channel.sendMessage({type: 'pushBlocks', content: blocks });
+  pushBlocks(path: string, blocks: Block[]) {
+    this.channel.sendMessage({
+      type: 'pushBlocks',
+      content: {
+        path: path,
+        blocks: blocks
+      }
+    });
   }
 
   /* Requests from the peer to send us it's blocks */
-  pullBlocks() {
-    this.channel.sendMessage({type: 'pullBlocks', content: {} });
+  pullBlocks(path: string) {
+    this.channel.sendMessage({
+      type: 'pullBlocks',
+      content: { path: path }
+    });
   }
 }
 
 /* Main controller for p2p code */
 export default class Client {
   private events = new EventEmitter();
+  private blockMap: {[i: string]: Block} = {};  // Index by block id
+  private blockList: {[i: string]: Block[]} = {'': []};  // Indexed by path
 
-  blockMap: {[i: string]: Block} = {};
-  blockList: Block[] = [];
   peers: {[i: string]: Peer} = {};
   server: Channel;
   channelManager: ChannelManager;
@@ -53,27 +62,34 @@ export default class Client {
   }
 
   /* Sends the block to every known peer */
-  pushBlock(content: any) {
+  pushBlock(path: string, content: any) {
     const block: Block = {
       content: content,
       id: genRandomString()
     };
 
-    this.blockList.push(block);
+    this.getBlocks(path).push(block);
     this.blockMap[block.id] = block;
 
     for (const peerId in this.peers) {
       const peer = this.peers[peerId];
-      peer.pushBlocks([ block ]);
+      peer.pushBlocks(path, [ block ]);
     }
   }
 
   /* Request from peers for them to send us their blocks */
-  pullBlocks() {
+  pullBlocks(path: string) {
     for (const peerId in this.peers) {
       const peer = this.peers[peerId];
-      peer.pullBlocks();
+      peer.pullBlocks(path);
     }
+  }
+
+  getBlocks(path: string): Block[] {
+    //TODO normalize path
+    if (!(path in this.blockList))
+      this.blockList[path] = [];
+    return this.blockList[path];
   }
 
   /* Registers `callback` for block updates */
@@ -90,13 +106,15 @@ export default class Client {
   private handlePeerMsg(peer: Peer, msg: Message) {
     if (msg.type == "pullBlocks") {
       // Someone requrested our blocks, so send it to them
-      peer.pushBlocks(this.blockList);
+      const path = msg.content.path;
+      peer.pushBlocks(path, this.getBlocks(path));
     } else if (msg.type == "pushBlocks") {
       // We just received blocks so add them to ours
-      for (const block of <Block[]>msg.content) {
+      const list = this.getBlocks(msg.content.path);
+      for (const block of <Block[]>msg.content.blocks) {
         if (!(block.id in this.blockMap)) {
           this.blockMap[block.id] = block;
-          this.blockList.push(block);
+          list.push(block);
         }
       }
       this.events.emit('pulled-blocks', msg.content);
@@ -120,16 +138,9 @@ export default class Client {
     this.events.emit('connected-peer', peer);
 
     // Send the peer our blocks
-    peer.pushBlocks(this.blockList);
+    peer.pushBlocks("", this.getBlocks(""));
   }
 }
-
-function mergeInto<T>(listA: T[], listB: T[]) {
-  listB.forEach(function(e) {
-    if (listA.indexOf(e) === -1)
-      listA.push(e);
-  });
-};
 
 function genRandomString() {
   return "" + Math.round(Math.random() * 99999999999);

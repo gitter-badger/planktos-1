@@ -8,12 +8,14 @@ angular.module('app', ['ngMaterial'])
   var client = new Client();
   client.connect();
 
-  $scope.blocks = client.blockList;
+  $scope.getBlocks = function(path) {
+    return client.getBlocks(path);
+  };
 
   $scope.messageText = '';
 
   $scope.postMessage = function() {
-    client.pushBlock ($scope.messageText);
+    client.pushBlock ("", $scope.messageText);
     $scope.messageText = '';
   };
 
