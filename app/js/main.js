@@ -2,10 +2,8 @@
 
 var Client = require('client').default;
 
-console.log(Client);
-
 angular.module('app', ['ngMaterial'])
-.controller('mainCtrl', ['$scope', '$timeout', ($scope, $timeout) => {
+.controller('mainCtrl', ['$scope', '$timeout', function($scope, $timeout) {
 
   var client = new Client();
   client.connect();
@@ -19,12 +17,7 @@ angular.module('app', ['ngMaterial'])
     $scope.messageText = '';
   };
 
-  client.blockWatchers.push(function() {
-    $timeout();
-  });
-
-  client.master.peerWatchers.push(function() {
-    client.pullBlocks();
-  });
+  // Refresh the view when we receive blocks
+  client.onPulledBlocks(() => $timeout());
 
 }]);

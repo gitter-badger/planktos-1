@@ -1,7 +1,7 @@
 import * as socketio from 'socket.io';
 import * as http from 'http';
 import * as express from 'express';
-import { Message } from './peer';
+import { Message } from './channel';
 
 const app = express();
 const server = http.createServer(app);
@@ -18,24 +18,17 @@ io.on('connection', (socket: SocketIO.Socket) => {
   // keep track of all the peers
   peers.push(socket.id);
 
-  // Broadcast the peer's info to all other peers
-  const newPeerMsg: Message = {
-    type: 'newPeers',
-    content: [socket.id]
-  };
-  socket.broadcast.send(newPeerMsg);
-
   socket.on('message', function(msg: Message) {
-    console.log("Received message", msg.type, msg.content);
+    console.info("RECV", msg.type, JSON.stringify(msg.content));
 
     if (msg.type == "findPeers") {
       // The peer requested more peers
       findPeers(socket);
     } else if (msg.type == "relay") {
       // The peer wants a message relayed to another
-      relayToPeer(socket, msg.content);
+      relayToPeer(socket, msg);
     } else {
-      console.log("Unknown type", msg);
+      console.warn("Unknown type", msg);
     }
   });
 
@@ -56,17 +49,9 @@ function findPeers(socket: SocketIO.Socket) {
   socket.send(msg);
 };
 
-function relayToPeer(socket: SocketIO.Socket, content: any) {
-  if (io.sockets.connected[content.peerId]) {
-    const relayMsg: Message = {
-      type: 'relayToPeer',
-      content: {
-        peerId: socket.id,
-        msg: content.msg
-      }
-    };
-    console.log("RELAYED", relayMsg);
-    io.sockets.connected[content.peerId].send(relayMsg);
+function relayToPeer(socket: SocketIO.Socket, msg: Message) {
+  if (io.sockets.connected[msg.content.toId]) {
+    io.sockets.connected[msg.content.toId].send(msg);
   }
 };
 

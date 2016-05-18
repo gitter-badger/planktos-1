@@ -9,16 +9,16 @@ describe('sanity tests', function() {
     const clientB = new Client();
 
     function onNewPeer(peer) {
-      const peersA = Object.keys(clientA.master.peers);
-      const peersB = Object.keys(clientB.master.peers);
+      const peersA = Object.keys(clientA.peers);
+      const peersB = Object.keys(clientB.peers);
       const numPeers = peersA.length + peersB.length;
 
       //TODO Sometime peers from previous tests will linger
       //causing the assert below to fail
       assert (peersA.length <= 1 && peersB.length <= 1);
       if (peersA.length == 1 && peersB.length == 1) {
-        assert(peersA[0].indexOf(clientB.master.id) !== -1);
-        assert(peersB[0].indexOf(clientA.master.id) !== -1);
+        assert(peersA[0].indexOf(clientB.localId) !== -1);
+        assert(peersB[0].indexOf(clientA.localId) !== -1);
         clientA.pushBlock("A");
         clientB.pushBlock("B");
       }
@@ -35,10 +35,10 @@ describe('sanity tests', function() {
       }
     }
 
-    clientA.master.peerWatchers.push(onNewPeer);
-    clientB.master.peerWatchers.push(onNewPeer);
-    clientA.blockWatchers.push(onNewBlock);
-    clientB.blockWatchers.push(onNewBlock);
+    clientA.onPeerConnect(onNewPeer);
+    clientB.onPeerConnect(onNewPeer);
+    clientA.onPulledBlocks(onNewBlock);
+    clientB.onPulledBlocks(onNewBlock);
 
     clientA.connect(masterUrl);
     clientB.connect(masterUrl);
