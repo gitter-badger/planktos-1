@@ -21,7 +21,7 @@ gulp.task('copy', function() {
 });
 
 gulp.task('make', function() {
-  return gulp.src(['lib/**/*.ts', 'typings/main.d.ts'])
+  return gulp.src(['lib/**/*.ts', 'typings/index.d.ts'])
     .pipe(ts(tsProject))
     .pipe(gulp.dest('build/lib'));
 });
