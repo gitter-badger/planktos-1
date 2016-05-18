@@ -8,7 +8,7 @@ angular.module('app', ['ngMaterial'])
   var client = new Client();
   client.connect();
 
-  $scope.blocks = client.blocks;
+  $scope.blocks = client.blockList;
 
   $scope.messageText = '';
 

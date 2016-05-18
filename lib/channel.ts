@@ -263,7 +263,3 @@ export class ChannelManager {
     this.pendingChannels[remoteId] = wrtc;
   }
 }
-
-function genRandomString() {
-  return "" + Math.round(Math.random() * 99999999999);
-}

@@ -1,7 +1,11 @@
 import {ChannelManager, Channel, Message, SocketioChannel} from './channel';
 import { EventEmitter } from 'events';
 
-type Block = string;
+/* Basic data unit that is stored and retrieved on the network */
+class Block {
+  content: any;
+  id: string;
+}
 
 /* A remote peer that can be communicated with.
  * Peers can send/recveive blocks through their
@@ -29,7 +33,8 @@ class Peer {
 export default class Client {
   private events = new EventEmitter();
 
-  blocks: Block[] = [];
+  blockMap: {[i: string]: Block} = {};
+  blockList: Block[] = [];
   peers: {[i: string]: Peer} = {};
   server: Channel;
   channelManager: ChannelManager;
@@ -48,11 +53,18 @@ export default class Client {
   }
 
   /* Sends the block to every known peer */
-  pushBlock(content: string) {
-    this.blocks.push(content);
+  pushBlock(content: any) {
+    const block: Block = {
+      content: content,
+      id: genRandomString()
+    };
+
+    this.blockList.push(block);
+    this.blockMap[block.id] = block;
+
     for (const peerId in this.peers) {
       const peer = this.peers[peerId];
-      peer.pushBlocks([ content ]);
+      peer.pushBlocks([ block ]);
     }
   }
 
@@ -78,10 +90,15 @@ export default class Client {
   private handlePeerMsg(peer: Peer, msg: Message) {
     if (msg.type == "pullBlocks") {
       // Someone requrested our blocks, so send it to them
-      peer.pushBlocks(this.blocks);
+      peer.pushBlocks(this.blockList);
     } else if (msg.type == "pushBlocks") {
       // We just received blocks so add them to ours
-      mergeInto (this.blocks, msg.content);
+      for (const block of <Block[]>msg.content) {
+        if (!(block.id in this.blockMap)) {
+          this.blockMap[block.id] = block;
+          this.blockList.push(block);
+        }
+      }
       this.events.emit('pulled-blocks', msg.content);
     }
   }
@@ -103,7 +120,7 @@ export default class Client {
     this.events.emit('connected-peer', peer);
 
     // Send the peer our blocks
-    peer.pushBlocks(this.blocks);
+    peer.pushBlocks(this.blockList);
   }
 }
 
@@ -113,3 +130,7 @@ function mergeInto<T>(listA: T[], listB: T[]) {
       listA.push(e);
   });
 };
+
+function genRandomString() {
+  return "" + Math.round(Math.random() * 99999999999);
+}
