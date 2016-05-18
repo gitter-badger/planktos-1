@@ -2,18 +2,12 @@
 
 ## Setup
 
-First, nodejs and npm will need to be installed. Most of the time npm installed whenever nodejs is installed. Node can be installed with brew, aptitude, or downloaded from the nodejs website.
+[NodeJs](https://nodejs.org/) and it's package manager [npm](http://blog.npmjs.org/post/85484771375/how-to-install-npm) will need to be installed. Once installed, run `npm install` from within the project root to install all the dependcies.
 
-Installing all the dependcies can be done inside the project root with:
-```
-npm install -g gulp bower typings
-npm install
-bower install
-typings install
-```
 
-## Building
-Running `gulp serve` from within the project root will compile everything and start an http server on port 8000. When file changes are detected, the code is automatically recompilled.
+## Running and Building
+Running `npm start` from within the project root will compile everything and start an http server on port 8000. When file changes are detected, the code is automatically recompilled.
+Opening up a web browser and pointing to `http://localhost:8000/` will load the app.
 
 ## Project layout
 
