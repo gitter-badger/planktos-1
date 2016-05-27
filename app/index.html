@@ -17,9 +17,12 @@
             <md-list>
               <md-subheader class="md-no-sticky">Posts</md-subheader>
               <div ng-repeat="block in getBlocks('')">
-                <md-list-item class="md-1-line">
+                <md-list-item ng-click="selectPost(block)" class="md-1-line">
                   <div class="md-list-item-text" layout="column">
-                    <p>{{ block.content }}</p>
+                    <h3>{{ block.content.title }}</h3>
+                    <p ng-show="block == selectedPost">
+                      {{ block.content.body }}
+                    </p>
                   </div>
                 </md-list-item>
                 <md-divider ng-hide="$last"></md-divider>
@@ -32,16 +35,25 @@
   </div>
   <!-- END display blocks -->
 
-  <!-- BEGIN post message -->
-  <div ng-cloak>
+  <!-- BEGIN create post -->
+  <div ng-controller="createPostCtrl" ng-cloak>
     <md-content layout="row" layout-wrap layout-align="center start" layout-xs="column">
       <div flex="50" flex-sm="100" flex-xs="100" layout="column">
         <md-card>
+          <md-card-title>
+            <md-card-title-text>
+              <span class="md-headline">Submit a post</span>
+            </md-card-title-text>
+          </md-card-title>
           <md-card-content>
             <md-input-container class="md-block">
-              <label>Post a message</label>
-              <textarea ng-model="messageText" columns="1" md-maxlength="150" rows="5"></textarea>
-              <md-button ng-disabled="messageText == ''" ng-click="postMessage()" class="md-raised md-primary">Send</md-button>
+              <label>Title</label>
+              <input type="text" ng-model="postTitle">
+            </md-input-container>
+            <md-input-container class="md-block">
+              <label>Content</label>
+              <textarea ng-model="postBody" columns="1" md-maxlength="150" rows="5"></textarea>
+              <md-button ng-disabled="!canSubmit()" ng-click="submitPost()" class="md-raised md-primary">Send</md-button>
             </md-input-container>
           </md-card-content>
         </md-card>

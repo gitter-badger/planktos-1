@@ -1,25 +1,42 @@
 "use strict";
 
 var Client = require('client').default;
+var client = new Client();
 
 angular.module('app', ['ngMaterial'])
 .controller('mainCtrl', ['$scope', '$timeout', function($scope, $timeout) {
 
-  var client = new Client();
   client.connect();
+
+  $scope.selectedPost = null;
+
+  $scope.selectPost = function(block) {
+    $scope.selectedPost = $scope.selectedPost == block ? null : block;
+  };
 
   $scope.getBlocks = function(path) {
     return client.getBlocks(path);
   };
 
-  $scope.messageText = '';
-
-  $scope.postMessage = function() {
-    client.pushBlock ("", $scope.messageText);
-    $scope.messageText = '';
-  };
-
   // Refresh the view when we receive blocks
   client.onPulledBlocks(() => $timeout());
+}])
+.controller('createPostCtrl', ['$scope', function($scope) {
+  $scope.postBody = '';
+  $scope.postTitle = '';
 
+  $scope.canSubmit = function() {
+    return $scope.postBody != '' &&
+           $scope.postTitle != '';
+  };
+
+  $scope.submitPost = function() {
+    client.pushBlock ("", {
+      title: $scope.postTitle,
+      body: $scope.postBody
+    });
+    $scope.postBody = '';
+    $scope.postTitle = '';
+  };
+  
 }]);
