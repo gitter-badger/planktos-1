@@ -18,6 +18,20 @@ angular.module('app', ['ngMaterial'])
     return client.getBlocks(path);
   };
 
+  $scope.getTitlePreview = function(block) {
+    var max = 50;
+    if ($scope.selectedPost !== block && block.content.title.length > max)
+      return block.content.title.substr(0, max) + "...";
+    return block.content.title;
+  };
+
+  $scope.getBodyPreview = function(block) {
+    var max = 50;
+    if (block.content.body.length > max)
+      return block.content.body.substr(0, max) + "...";
+    return block.content.body;
+  };
+
   // Refresh the view when we receive blocks
   client.onPulledBlocks(() => $timeout());
 }])

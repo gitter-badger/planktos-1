@@ -2,29 +2,57 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>P2Pweb</title>
+  <title>P2P Web</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/bower_components/angular-material/angular-material.min.css">
 </head>
 <body ng-app="app" ng-controller="mainCtrl">
 
+  <!-- BEGIN header -->
+  <md-toolbar md-scroll-shrink>
+    <div class="md-toolbar-tools">
+      <h3><span>P2P WEB</span></h3>
+    </div>
+  </md-toolbar>
+  <!-- END header -->
+
   <!-- BEGIN display blocks -->
-  <div ng-cloak ng-hide="getBlocks('').length == 0">
+  <div ng-cloak>
     <md-content layout="row" layout-wrap layout-align="center start" layout-xs="column">
-      <div flex="50" flex-sm="100" flex-xs="100" layout="column">
+      <div flex="70" flex-sm="100" flex-xs="100" layout="column">
         <md-card>
+          <md-card-title>
+            <md-card-title-text>
+              <span class="md-headline">Posts</span>
+            </md-card-title-text>
+          </md-card-title>
           <md-card-content>
-            <md-list>
-              <md-subheader class="md-no-sticky">Posts</md-subheader>
+            <div ng-show="getBlocks('').length == 0" layout="row" layout-sm="column" layout-align="space-around">
+              <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+            </div>
+            <md-list ng-hide="getBlocks('').length == 0">
               <div ng-repeat="block in getBlocks('')">
-                <md-list-item ng-click="selectPost(block)" class="md-1-line">
+
+                <!-- Display if this item is the selected item -->
+                <md-list-item ng-show="block === selectedPost" class="md-1-line md-long-text">
                   <div class="md-list-item-text" layout="column">
-                    <h3>{{ block.content.title }}</h3>
-                    <p ng-show="block == selectedPost">
+                    <div ng-click="selectPost(block)" class="md-title">{{ getTitlePreview(block) }}</div>
+                    <div ng-show="block === selectedPost" class="md-body-1">
                       {{ block.content.body }}
-                    </p>
+                    </div>
                   </div>
                 </md-list-item>
+
+                <!-- Display if this item is *NOT* the selected item -->
+                <md-list-item ng-hide="block === selectedPost" ng-click="selectPost(block)" class="md-2-line">
+                  <div class="md-list-item-text" layout="column">
+                    <div class="md-title">{{ getTitlePreview(block) }}</div>
+                    <div class="md-body-1">
+                      {{ getBodyPreview(block) }}
+                    </div>
+                  </div>
+                </md-list-item>
+
                 <md-divider ng-hide="$last"></md-divider>
               </div>
             </md-list>
@@ -38,7 +66,7 @@
   <!-- BEGIN create post -->
   <div ng-controller="createPostCtrl" ng-cloak>
     <md-content layout="row" layout-wrap layout-align="center start" layout-xs="column">
-      <div flex="50" flex-sm="100" flex-xs="100" layout="column">
+      <div flex="70" flex-sm="100" flex-xs="100" layout="column">
         <md-card>
           <md-card-title>
             <md-card-title-text>
@@ -52,7 +80,7 @@
             </md-input-container>
             <md-input-container class="md-block">
               <label>Content</label>
-              <textarea ng-model="postBody" columns="1" md-maxlength="150" rows="5"></textarea>
+              <textarea ng-model="postBody" columns="1"></textarea>
               <md-button ng-disabled="!canSubmit()" ng-click="submitPost()" class="md-raised md-primary">Send</md-button>
             </md-input-container>
           </md-card-content>
