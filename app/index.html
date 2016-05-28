@@ -5,6 +5,7 @@
   <title>P2P Web</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="/bower_components/angular-material/angular-material.min.css">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body ng-app="app" ng-controller="mainCtrl">
 
@@ -17,7 +18,7 @@
   <!-- END header -->
 
   <!-- BEGIN display blocks -->
-  <div ng-cloak>
+  <div class="ng-cloak">
     <md-content layout="row" layout-wrap layout-align="center start" layout-xs="column">
       <div flex="70" flex-sm="100" flex-xs="100" layout="column">
         <md-card>
@@ -36,9 +37,18 @@
                 <!-- Display if this item is the selected item -->
                 <md-list-item ng-show="block === selectedPost" class="md-1-line md-long-text">
                   <div class="md-list-item-text" layout="column">
-                    <div ng-click="selectPost(block)" class="md-title">{{ getTitlePreview(block) }}</div>
-                    <div ng-show="block === selectedPost" class="md-body-1">
-                      {{ block.content.body }}
+                    <div class="md-title">
+                      <span ng-click="vote(block, 1)" ng-class="{'arrow-pushed': getMyVote(block) === 1}" class="arrow-up"></span>
+                      <span>{{getVoteCount(block)}}</span>
+                      <span ng-click="vote(block, -1)" ng-class="{'arrow-pushed': getMyVote(block) === -1}" class="arrow-down space-right"></span>
+                      <span ng-click="selectPost(block)">
+                        {{ getTitlePreview(block) }}
+                      </span>
+                    </div>
+                    <div ng-show="block === selectedPost" class="md-body-1" track by $index>
+                      <p ng-repeat="line in block.content.body.split('\n') track by $index">
+                        {{ line }}
+                      </p>
                     </div>
                   </div>
                 </md-list-item>
@@ -46,7 +56,9 @@
                 <!-- Display if this item is *NOT* the selected item -->
                 <md-list-item ng-hide="block === selectedPost" ng-click="selectPost(block)" class="md-2-line">
                   <div class="md-list-item-text" layout="column">
-                    <div class="md-title">{{ getTitlePreview(block) }}</div>
+                    <div class="md-title">
+                      {{ getTitlePreview(block) }}
+                    </div>
                     <div class="md-body-1">
                       {{ getBodyPreview(block) }}
                     </div>
@@ -64,7 +76,7 @@
   <!-- END display blocks -->
 
   <!-- BEGIN create post -->
-  <div ng-controller="createPostCtrl" ng-cloak>
+  <div ng-controller="createPostCtrl"  class="ng-cloak">
     <md-content layout="row" layout-wrap layout-align="center start" layout-xs="column">
       <div flex="70" flex-sm="100" flex-xs="100" layout="column">
         <md-card>

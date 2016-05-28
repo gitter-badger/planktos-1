@@ -6,7 +6,7 @@ var client = new Client();
 angular.module('app', ['ngMaterial'])
 .controller('mainCtrl', ['$scope', '$timeout', function($scope, $timeout) {
 
-  client.connect();
+  var myVotes = {}; // block.id -> vote. Either +1 or -1)
 
   $scope.selectedPost = null;
 
@@ -32,8 +32,39 @@ angular.module('app', ['ngMaterial'])
     return block.content.body;
   };
 
-  // Refresh the view when we receive blocks
-  client.onPulledBlocks(() => $timeout());
+  $scope.getVoteCount = function(block) {
+    var sum = 0;
+    var voteBlocks = client.getBlocks(block.id + '/vote');
+    for (var i in voteBlocks)
+      sum += voteBlocks[i].content;
+    return sum;
+  };
+
+  // sign is the vote. Either +1 or -1
+  $scope.vote = function(block, sign) {
+    if (!(block.id in myVotes)) {
+      myVotes[block.id] = sign;
+      client.pushBlock(block.id + '/vote', sign);
+    }
+  };
+
+  $scope.getMyVote = function(block) {
+    return block.id in myVotes ? myVotes[block.id] : 0;
+  };
+
+  client.onPulledBlocks(function(blocks, path) {
+    if (path === "") {
+      // Just received new posts, pull all of it's votes
+      for (var i in blocks) {
+        client.pullBlocks(blocks[i].id + '/vote');
+      }
+    }
+    // Update the angular view
+    $timeout();
+  });
+
+  client.connect();
+
 }])
 .controller('createPostCtrl', ['$scope', function($scope) {
   $scope.postBody = '';
@@ -52,5 +83,5 @@ angular.module('app', ['ngMaterial'])
     $scope.postBody = '';
     $scope.postTitle = '';
   };
-  
+
 }]);

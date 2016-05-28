@@ -93,7 +93,7 @@ export default class Client {
   }
 
   /* Registers `callback` for block updates */
-  onPulledBlocks(callback: (b: Block[])=>void) {
+  onPulledBlocks(callback: (b: Block[], path: String)=>void) {
     this.events.on('pulled-blocks', callback);
   }
 
@@ -117,7 +117,7 @@ export default class Client {
           list.push(block);
         }
       }
-      this.events.emit('pulled-blocks', msg.content);
+      this.events.emit('pulled-blocks', msg.content.blocks, msg.content.path);
     }
   }
 
