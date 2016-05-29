@@ -9,62 +9,60 @@ export interface Message {
 
 /* Bi-directional communication via message passing between a
  * source and destination
+ * Emits: message(msg: Message), connect(), error(e: any)
  */
-export interface Channel {
+export interface Channel extends NodeJS.EventEmitter {
   getRemoteId(): string;
   sendMessage(m: Message): void;
-  onMessage(callback: (m: Message)=>void): void;
-  // TODO add onConnect and onDisconnect
+  // TODO add onDisconnect
 }
 
 /* Communication to/from a server using socketio as the transport */
-export class SocketioChannel implements Channel {
+export class SocketioChannel extends EventEmitter implements Channel {
   private socket: SocketIOClient.Socket;
 
   constructor(masterUrl?: string) {
+    super();
     this.socket = socketio.connect(masterUrl);
-    this.onMessage((msg) => {
+    this.socket.on('message', (msg: Message) => {
       console.info("SOCKETIO RECV", JSON.stringify(msg));
+      this.emit('message', msg);
+    });
+    this.socket.on('connect', () => {
+      this.emit('connect');
     });
   }
 
   getRemoteId() {
-    return this.socket.id;
+    return '/#' + this.socket.id;
   }
 
   sendMessage(msg: Message) {
     console.info("SOCKETIO SEND", JSON.stringify(msg));
     this.socket.send(msg);
   }
-
-  onMessage(callback: (m: Message)=>void) {
-    this.socket.on('message', callback);
-  }
-
-  onConnect(callback: (id: string)=>void) {
-    this.socket.on('connect', () => callback('/#' + this.socket.id));
-  }
 }
 
 /* Channel that relays it's messages through another channel */
-export class RelayChannel implements Channel {
+export class RelayChannel extends EventEmitter implements Channel {
   private remoteId: string;
   private localId: string;
   private relay: Channel;
-  private events = new EventEmitter();
 
   constructor(relay: Channel, localId: string, remoteId: string) {
+    super();
     this.localId = localId;
     this.remoteId = remoteId;
     this.relay = relay;
-    relay.onMessage(msg => {
+    relay.on('message', (msg: Message) => {
       // Only accpet messages that have the exported toId/fromId since
       // there may be multiple RelayChannels using the same relay
       if (msg.type === 'relay' && msg.content.toId === this.localId &&
                                   msg.content.fromId == this.remoteId) {
-          this.events.emit('message', msg.content.msg);
+          this.emit('message', msg.content.msg);
       }
     });
+    this.emit('connect');
   }
 
   getRemoteId() {
@@ -83,14 +81,10 @@ export class RelayChannel implements Channel {
 
     this.relay.sendMessage(relayMsg);
   }
-
-  onMessage(callback: (m: Message)=>void) {
-    this.events.on('message', callback);
-  }
 }
 
 /* Channel that uses webrtc as it's transport */
-export class WrtcChannel implements Channel {
+export class WrtcChannel extends EventEmitter implements Channel {
   private signaler: Channel;
   private remoteId: string;
   private webrtc: any;  // Instance of SimplePeer
@@ -103,6 +97,7 @@ export class WrtcChannel implements Channel {
    * After this, the two peers are connected
    */
   constructor(signaler: Channel, remoteId: string, offer?: any) {
+    super();
     if (!SimplePeer.WEBRTC_SUPPORT)
       throw new Error("WebRTC is not supported!");
     this.signaler = signaler;
@@ -115,7 +110,7 @@ export class WrtcChannel implements Channel {
     if (typeof(offer) !== 'undefined')
       this.webrtc.signal(offer);
 
-    this.signaler.onMessage((msg: Message) => {
+    this.signaler.on('message', (msg: Message) => {
       if (msg.type !== 'signal') {
         console.warn("Received message other than signals over signaler channel", msg);
         return;
@@ -134,14 +129,18 @@ export class WrtcChannel implements Channel {
 
     this.webrtc.on('connect', () => {
       console.info("WEBRTC CONNECTED");
+      this.emit('connect');
     });
 
     this.webrtc.on('error', (e: any) => {
       console.warn("WEBRTC ERROR", e);
+      this.emit('error', e);
     });
 
-    this.onMessage((msg: Message) => {
+    this.webrtc.on('data', (data: string) => {
+      const msg: Message = JSON.parse(data);
       console.info("WRTC RECV", JSON.stringify(msg));
+      this.emit('message', msg);
     });
   }
 
@@ -149,20 +148,10 @@ export class WrtcChannel implements Channel {
     return this.remoteId;
   }
 
-  onConnect(callback: ()=>void) {
-    this.webrtc.on('connect', callback);
-  }
-
   sendMessage(msg: Message) {
     const str = JSON.stringify(msg);
     console.info("WRTC SEND", str);
     this.webrtc.send(str);
-  }
-
-  onMessage(callback: (m: Message) => void) {
-    this.webrtc.on('data', function(data: string) {
-      callback(JSON.parse(data));
-    });
   }
 }
 
@@ -172,13 +161,15 @@ export class WrtcChannel implements Channel {
  * up a relay channel that relays all the messages between the
  * peers through a server so the peers can exchange signaling
  * information. When the peers connect over webrtc the
- * ChannelManager's `onConnect` event is fired.
+ * ChannelManager's 'connect' event is fired.
+ *
+ * Emits: channel-connect()
  */
-export class ChannelManager {
+export class ChannelManager extends EventEmitter {
 
   private server: Channel;
   private localId: string;
-  private events = new EventEmitter();
+
 
   // Channels that are in the process of exhanging signaling info
   private pendingChannels: {[i: string]: WrtcChannel} = {};
@@ -187,9 +178,10 @@ export class ChannelManager {
   private connectedChannels: {[i: string]: Channel} = {};
 
   constructor(localId: string, server: Channel) {
+    super();
     this.localId = localId;
     this.server = server;
-    server.onMessage((msg) => this.handleServerMsg(msg));
+    server.on('message', (msg: Message) => this.handleServerMsg(msg));
     this.findPeers();
   }
 
@@ -200,11 +192,6 @@ export class ChannelManager {
   /* Asks the server for more peers and attempts to connect to them */
   findPeers() {
     this.server.sendMessage({ type: 'findPeers', content: {} });
-  }
-
-  /* Registers a callback for a new channel is connected */
-  onConnect(callback: (c: Channel)=>void) {
-    this.events.on('connect', callback);
   }
 
   /* Called when we received a message from the server */
@@ -253,10 +240,10 @@ export class ChannelManager {
     const signaler = new RelayChannel(this.server, this.getLocalId(), remoteId);
     const wrtc = new WrtcChannel(signaler, remoteId, offer);
 
-    wrtc.onConnect(() => {
+    wrtc.on('connect', () => {
       this.connectedChannels[remoteId] = wrtc;
       delete this.pendingChannels[remoteId];
-      this.events.emit('connect', wrtc);
+      this.emit('channel-connect', wrtc);
     });
 
     //TODO Cleanup pending peers if connection fails after timeout

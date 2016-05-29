@@ -35,10 +35,10 @@ describe('sanity tests', function() {
       }
     }
 
-    clientA.onPeerConnect(onNewPeer);
-    clientB.onPeerConnect(onNewPeer);
-    clientA.onPulledBlocks(onNewBlock);
-    clientB.onPulledBlocks(onNewBlock);
+    clientA.on('connected-peer', onNewPeer);
+    clientB.on('connected-peer', onNewPeer);
+    clientA.on('pulled-blocks', onNewBlock);
+    clientB.on('pulled-blocks', onNewBlock);
 
     clientA.connect(masterUrl);
     clientB.connect(masterUrl);

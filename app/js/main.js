@@ -52,7 +52,7 @@ angular.module('app', ['ngMaterial'])
     return block.id in myVotes ? myVotes[block.id] : 0;
   };
 
-  client.onPulledBlocks(function(blocks, path) {
+  client.on('pulled-blocks', function(blocks, path) {
     if (path === "") {
       // Just received new posts, pull all of it's votes
       for (var i in blocks) {

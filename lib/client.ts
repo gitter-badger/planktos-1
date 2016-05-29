@@ -38,9 +38,11 @@ class Peer {
   }
 }
 
-/* Main controller for p2p code */
-export default class Client {
-  private events = new EventEmitter();
+/* Main controller for p2p code
+ *
+ * Emits: pulled-blocks(blocks: Block[], path: string), connected-peer(p: Peer)
+ */
+export default class Client extends EventEmitter {
   private blockMap: {[i: string]: Block} = {};  // Index by block id
   private blockList: {[i: string]: Block[]} = {'': []};  // Indexed by path
 
@@ -49,14 +51,19 @@ export default class Client {
   channelManager: ChannelManager;
   localId: string;
 
+  constructor() {
+    super();
+  }
+
   connect(masterUrl?: string) {
     // Initiate a connection to the server
     const c = new SocketioChannel(masterUrl);
-    c.onConnect((localId) => {
-      this.localId = localId;
+    c.on('connect', () => {
+      // Use the remote id the socketio server assigns us as our local id
+      this.localId = c.getRemoteId();
       // Start the channel manager in order to connect to peers
-      this.channelManager = new ChannelManager(localId, c);
-      this.channelManager.onConnect((c) => this.handleNewConnections(c));
+      this.channelManager = new ChannelManager(this.localId, c);
+      this.channelManager.on('channel-connect', (c: Channel) => this.handleNewConnections(c));
     });
     this.server = c;
   }
@@ -92,16 +99,6 @@ export default class Client {
     return this.blockList[path];
   }
 
-  /* Registers `callback` for block updates */
-  onPulledBlocks(callback: (b: Block[], path: String)=>void) {
-    this.events.on('pulled-blocks', callback);
-  }
-
-  /* Registers `callback` for peer connected events */
-  onPeerConnect(callback: (p: Peer)=>void) {
-    this.events.on('connected-peer', callback);
-  }
-
   /* Handles received messages from all peers */
   private handlePeerMsg(peer: Peer, msg: Message) {
     if (msg.type == "pullBlocks") {
@@ -117,7 +114,9 @@ export default class Client {
           list.push(block);
         }
       }
-      this.events.emit('pulled-blocks', msg.content.blocks, msg.content.path);
+      this.emit('pulled-blocks', msg.content.blocks, msg.content.path);
+    } else {
+      console.warn("Recieved message with unknown type", msg, peer);
     }
   }
 
@@ -130,12 +129,12 @@ export default class Client {
     const peer = new Peer(channel);
 
     // Register a callback so we can handle all peer messages
-    channel.onMessage((msg) => {
+    channel.on('message', (msg: Message) => {
       this.handlePeerMsg(peer, msg);
     });
 
     this.peers[channel.getRemoteId()] = peer;
-    this.events.emit('connected-peer', peer);
+    this.emit('connected-peer', peer);
 
     // Send the peer our blocks
     peer.pushBlocks("", this.getBlocks(""));
