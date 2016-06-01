@@ -1,23 +1,21 @@
-FROM ubuntu:14.04
+FROM alpine:3.3
 MAINTAINER Austin Middleton
 
-RUN apt-get update
-RUN apt-get upgrade -y
+RUN apk --no-cache add --virtual build-deps git
 
-RUN apt-get install -y\
-    nodejs\
-    npm
+RUN apk --no-cache add nodejs
 
-RUN ln -s /usr/bin/nodejs /usr/bin/node
-
-RUN addgroup --gid 4000 p2pweb
-RUN useradd --gid 4000 p2pweb
-
-Add . /home/p2pweb/
+RUN adduser -D p2pweb p2pweb
+ADD . /home/p2pweb
+RUN chown -R p2pweb:p2pweb /home/p2pweb
 WORKDIR /home/p2pweb
-RUN chown -R p2pweb:p2pweb .
-USER p2pweb
 
+USER p2pweb
 RUN npm install
+
+# Have to be root to remove deps
+USER root
+RUN apk del build-deps
+USER p2pweb
 
 ENTRYPOINT ["npm", "start"]
