@@ -1,4 +1,4 @@
-# p2pweb
+# P2PWeb
 
 ## Setup
 

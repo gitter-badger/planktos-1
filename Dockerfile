@@ -1,4 +1,4 @@
-FROM alpine:3.3
+FROM alpine:3.4
 MAINTAINER Austin Middleton
 
 RUN apk --no-cache add --virtual build-deps git
