@@ -13,12 +13,42 @@
   <md-toolbar md-scroll-shrink>
     <div class="md-toolbar-tools">
       <h3><span>P2P WEB</span></h3>
+      <span flex></span>
+      <a target="_blank" href="https://github.com/xuset/p2pweb#p2pweb"><md-button class="md-raised">View on github</md-button></a>
     </div>
   </md-toolbar>
   <!-- END header -->
 
+  <!-- BEGIN about -->
+  <div class="card">
+    <md-content layout="row" layout-wrap layout-align="center start">
+      <div flex="100" flex-gt-xs="70" layout="column">
+        <md-card>
+          <md-card-title>
+            <md-card-title-text>
+              <span class="md-headline">About P2P WEB</span>
+            </md-card-title-text>
+          </md-card-title>
+          <md-card-content>
+            <p style="text-align: justify">
+              P2PWeb is a framework that attempts to make building peer-to-peer web apps a breeze. This website serves
+              as a demo for that framework which allows users to store, retreive, and discover content in a completely
+              peer-to-peer way. All the posts you see below are not stored on any server and instead served straight
+              from the users visiting the website. P2PWeb is in an early alpha state so bugs are likely and load times
+              are slow, so please allow a few seconds for the content to load from your peers.
+            </p>
+          </md-card-content>
+          <md-card-actions layout="row" layout-align="end center">
+            <a target="_blank" href="https://github.com/xuset/p2pweb#p2pweb"><md-button class="md-raised">View on github</md-button></a>
+          </md-card-actions>
+        </md-card>
+      </div>
+    </md-content>
+  </div>
+  <!-- END about -->
+
   <!-- BEGIN display blocks -->
-  <div class="ng-cloak">
+  <div class="ng-cloak card">
     <md-content layout="row" layout-wrap layout-align="center start">
       <div flex="100" flex-gt-xs="70" layout="column">
         <md-card>
@@ -76,7 +106,7 @@
   <!-- END display blocks -->
 
   <!-- BEGIN create post -->
-  <div ng-controller="createPostCtrl"  class="ng-cloak">
+  <div ng-controller="createPostCtrl"  class="ng-cloak card">
     <md-content layout="row" layout-wrap layout-align="center start">
       <div flex="100" flex-gt-xs="70" layout="column">
         <md-card>
