@@ -66,6 +66,26 @@ angular.module('app', ['ngMaterial'])
   client.connect();
 
 }])
+.controller('loadingCtrl', ['$scope', '$timeout', function($scope, $timeout) {
+
+  var timedOut = false;
+
+  $scope.isLoading = function() {
+    return !timedOut || $scope.foundBlocks();
+  };
+
+  $scope.foundBlocks = function() {
+    return client.getBlocks('').length !== 0;
+  };
+
+  $scope.loadFailed = function() {
+    return timedOut && !$scope.foundBlocks();
+  };
+
+  $timeout(function() {
+    timedOut = true;
+  }, 10000); // 10 seconds
+}])
 .controller('createPostCtrl', ['$scope', function($scope) {
   $scope.postBody = '';
   $scope.postTitle = '';

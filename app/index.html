@@ -30,7 +30,7 @@
             </md-card-title-text>
           </md-card-title>
           <md-card-content>
-            <p style="text-align: justify">
+            <p class="md-body-1" style="text-align: justify">
               P2PWeb is a framework that attempts to make building peer-to-peer web apps a breeze. This website serves
               as a demo for that framework which allows users to store, retreive, and discover content in a completely
               peer-to-peer way. All the posts you see below are not stored on any server and instead served straight
@@ -58,9 +58,15 @@
             </md-card-title-text>
           </md-card-title>
           <md-card-content>
-            <div ng-show="getBlocks('').length == 0" layout="row" layout-align="center">
-              <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+            <div ng-controller="loadingCtrl" layout="row" layout-align="center">
+              <div ng-show="isLoading()">
+                <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+              </div>
+              <div ng-show="loadFailed()">
+                <p class="md-body-2">Either no peers are online right now, or there were problems connecting to peers :(</p>
+              </div>
             </div>
+
             <md-list ng-hide="getBlocks('').length == 0">
               <div ng-repeat="block in getBlocks('')">
 
