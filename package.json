@@ -12,7 +12,10 @@
   "scripts": {
     "start": "gulp",
     "test": "mocha",
-    "postinstall": "bower install; typings install"
+    "postinstall": "bower install; typings install",
+    "gulp": "gulp",
+    "typings": "typings",
+    "bower": "bower"
   },
   "dependencies": {
     "bower": "^1.7.9",

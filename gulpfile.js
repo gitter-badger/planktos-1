@@ -20,13 +20,7 @@ gulp.task('copy', function() {
   gulp.src('app/**/*').pipe(gulp.dest('build/app'));
 });
 
-gulp.task('make', function() {
-  return gulp.src(['lib/**/*.ts', 'typings/index.d.ts'])
-    .pipe(ts(tsProject))
-    .pipe(gulp.dest('build/lib'));
-});
-
-gulp.task('browserify', ['make'], function() {
+gulp.task('browserify', ['build-lib'], function() {
   return browserify()
   .require('./build/lib/client.js', { expose: 'client' })
   .bundle()
@@ -40,6 +34,12 @@ gulp.task('serve', ['build'], function() {
   nodemon({ script: 'build/lib/server.js', watch: 'build/lib' });
 });
 
-gulp.task('build', ['make', 'copy', 'browserify']);
+gulp.task('build-lib', function() {
+  return gulp.src(['lib/**/*.ts', 'typings/index.d.ts'])
+    .pipe(ts(tsProject))
+    .pipe(gulp.dest('build/lib'));
+});
+
+gulp.task('build', ['build-lib', 'copy', 'browserify']);
 
 gulp.task('default', ['serve']);
