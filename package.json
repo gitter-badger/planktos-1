@@ -1,9 +1,9 @@
 {
-  "name": "p2pweb",
+  "name": "planktos",
   "description": "A p2p take on the web",
   "version": "0.0.0",
-  "homepage": "https://github.com/xuset/p2pweb",
-  "keywords": ["p2p", "web", "webrtc", "rtc", "peer"],
+  "homepage": "https://github.com/xuset/planktos",
+  "keywords": ["planktos", "p2p", "web", "webrtc", "rtc", "peer"],
   "author": {
     "name": "Austin Middleton",
     "email": "austinmid@utexas.edu"

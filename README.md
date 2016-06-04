@@ -1,4 +1,4 @@
-# P2PWeb
+# Planktos
 
 ## Setup
 

@@ -1,12 +1,12 @@
 {
-  "name": "p2pweb",
+  "name": "planktos",
   "description": "A p2p take on the web",
   "main": "./src/index",
   "authors": [
     "Austin Middleton"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/xuset/p2pweb",
+  "homepage": "https://github.com/xuset/planktos",
   "moduleType": [
     "node"
   ],

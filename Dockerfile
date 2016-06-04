@@ -5,17 +5,17 @@ RUN apk --no-cache add --virtual build-deps git
 
 RUN apk --no-cache add nodejs
 
-RUN adduser -D p2pweb p2pweb
-ADD . /home/p2pweb
-RUN chown -R p2pweb:p2pweb /home/p2pweb
-WORKDIR /home/p2pweb
+RUN adduser -D planktos planktos
+ADD . /home/planktos
+RUN chown -R planktos:planktos /home/planktos
+WORKDIR /home/planktos
 
-USER p2pweb
+USER planktos
 RUN npm install
 
 # Have to be root to remove deps
 USER root
 RUN apk del build-deps
-USER p2pweb
+USER planktos
 
 ENTRYPOINT ["npm", "start"]

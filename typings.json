@@ -1,5 +1,5 @@
 {
-  "name": "p2pweb",
+  "name": "planktos",
   "dependencies": {},
   "globalDependencies": {
     "express": "registry:dt/express#4.0.0+20160317120654",
