@@ -93,7 +93,8 @@ export default class Client extends EventEmitter {
   }
 
   getBlocks(path: string): Block[] {
-    //TODO normalize path
+    path = normalizePath(path);
+
     if (!(path in this.blockList))
       this.blockList[path] = [];
     return this.blockList[path];
@@ -143,4 +144,8 @@ export default class Client extends EventEmitter {
 
 function genRandomString() {
   return "" + Math.round(Math.random() * 99999999999);
+}
+
+export function normalizePath (path: string) {
+  return path.replace(/\/+/g, '/');
 }

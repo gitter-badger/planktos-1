@@ -1,10 +1,15 @@
 const assert = require('assert');
 const Client = require('../build/lib/client').default;
+const normalizePath = require('../build/lib/client').normalizePath
+
+console.log(require('../build/lib/client'))
+
 const masterUrl = "http://localhost:8000/";
 
 describe('sanity tests', function() {
 
-  it('basic block push', function(done) {
+  // TODO(anyone): get webrtc working on node.js
+  /* it('basic block push', function(done) {
     const clientA = new Client();
     const clientB = new Client();
 
@@ -42,5 +47,11 @@ describe('sanity tests', function() {
 
     clientA.connect(masterUrl);
     clientB.connect(masterUrl);
+  });*/
+
+  it('normalize path test', function() {
+    path = '/a////a/a/a///////asdfadsf////asdfasdf//////asdfasdf//';
+    path = normalizePath(path);
+    assert(path.match(/\/{2,}/) == null);
   });
 });
