@@ -1,5 +1,7 @@
 # Planktos
 
+[![Join the chat at https://gitter.im/xuset/planktos](https://badges.gitter.im/xuset/planktos.svg)](https://gitter.im/xuset/planktos?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## Setup
 
 [NodeJs](https://nodejs.org/) and it's package manager [npm](http://blog.npmjs.org/post/85484771375/how-to-install-npm) will need to be installed. Once installed, run `npm install` from within the project root to install all the dependcies.
