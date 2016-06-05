@@ -129,6 +129,11 @@ export default class Client extends EventEmitter {
     }
     const peer = new Peer(channel);
 
+    channel.on('disconnect', () => {
+      delete this.peers[channel.getRemoteId()]
+      console.info("disconnected peer", channel.getRemoteId());
+    });
+
     // Register a callback so we can handle all peer messages
     channel.on('message', (msg: Message) => {
       this.handlePeerMsg(peer, msg);
