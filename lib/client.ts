@@ -1,4 +1,4 @@
-import {ChannelManager, Channel, Message, SocketioChannel} from './channel';
+import { ChannelManager, Channel, Message, startManager } from './channel';
 import { EventEmitter } from 'events';
 
 /* Basic data unit that is stored and retrieved on the network */
@@ -38,34 +38,35 @@ class Peer {
   }
 }
 
-/* Main controller for p2p code
+/* Main controller for p2p code.
+ * Data can be stored on the network by pushing blocks onto it,
+ * and data can be retreived by pulling blocks from it.
  *
- * Emits: pulled-blocks(blocks: Block[], path: string), connected-peer(p: Peer)
+ * Emits:
+ *     pulled-blocks(blocks: Block[], path: string) - Array of pulled blocks and their path
+ *     connected-peer(p: Peer)                      - A new peer has connected
  */
 export default class Client extends EventEmitter {
   private blockMap: {[i: string]: Block} = {};  // Index by block id
   private blockList: {[i: string]: Block[]} = {'': []};  // Indexed by path
+  private channelManager: ChannelManager;
 
   peers: {[i: string]: Peer} = {};
-  server: Channel;
-  channelManager: ChannelManager;
-  localId: string;
 
-  constructor() {
+  /* Starts a new client with the given ChannelManager or starts
+   * the default one if none is given */
+  constructor(cm?: ChannelManager) {
     super();
-  }
 
-  connect(masterUrl?: string) {
-    // Initiate a connection to the server
-    const c = new SocketioChannel(masterUrl);
-    c.on('connect', () => {
-      // Use the remote id the socketio server assigns us as our local id
-      this.localId = c.getRemoteId();
-      // Start the channel manager in order to connect to peers
-      this.channelManager = new ChannelManager(this.localId, c);
+    const onManagerStart = (cm: ChannelManager) => {
+      this.channelManager = cm;
       this.channelManager.on('channel-connect', (c: Channel) => this.handleNewConnections(c));
-    });
-    this.server = c;
+    };
+
+    if (cm)
+      onManagerStart(cm);
+    else
+      startManager(onManagerStart);
   }
 
   /* Sends the block to every known peer */
@@ -92,6 +93,7 @@ export default class Client extends EventEmitter {
     }
   }
 
+  /* Returns locally cached blocks at `path` */
   getBlocks(path: string): Block[] {
     path = normalizePath(path);
 

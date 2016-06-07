@@ -62,9 +62,6 @@ angular.module('app', ['ngMaterial'])
     // Update the angular view
     $timeout();
   });
-
-  client.connect();
-
 }])
 .controller('loadingCtrl', ['$scope', '$timeout', function($scope, $timeout) {
 
