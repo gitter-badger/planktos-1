@@ -1,11 +1,16 @@
-var browserify = require('browserify');
-var source = require('vinyl-source-stream');
-var gulp = require('gulp');
-var ts = require('gulp-typescript');
-var clean = require('gulp-clean');
-var nodemon = require('gulp-nodemon');
+const browserify = require('browserify');
+const source = require('vinyl-source-stream');
+const gulp = require('gulp');
+const ts = require('gulp-typescript');
+const clean = require('gulp-clean');
+const nodemon = require('gulp-nodemon');
 
-var tsProject = ts.createProject({
+const tsTests = ts.createProject({
+  outDir: 'build/test',
+  noImplicitAny: true
+});
+
+const tsLib = ts.createProject({
   outDir: 'build/lib',
   noImplicitAny: true
 });
@@ -36,10 +41,18 @@ gulp.task('serve', ['build'], function() {
 
 gulp.task('build-lib', function() {
   return gulp.src(['lib/**/*.ts', 'typings/index.d.ts'])
-    .pipe(ts(tsProject))
+    .pipe(ts(tsLib))
     .pipe(gulp.dest('build/lib'));
 });
 
-gulp.task('build', ['build-lib', 'copy', 'browserify']);
+gulp.task('build-tests', function() {
+    return gulp.src(['test/**/*.ts', 'typings/index.d.ts'])
+      .pipe(ts(tsTests))
+      .pipe(gulp.dest('build'));
+});
+
+gulp.task('build-app', ['browserify', 'copy']);
+
+gulp.task('build', ['build-lib', 'build-app', 'build-tests']);
 
 gulp.task('default', ['serve']);
