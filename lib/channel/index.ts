@@ -44,32 +44,39 @@ export interface ChannelManager extends NodeJS.EventEmitter {
   connect(remoteId: string): Channel;
 }
 
-/* Starts the default channel manager and calls `cb` when ready */
-export function startManager(cb?: (cm: ChannelManager)=>void) {
+/* Starts the default channel manager and returns a promise for when ready
+ * socketioUrl - the url of the socketio server to get peers from
+ * useWebrtc   - the webrtc module to use. If undefined the browser one
+ *        will be used or no webrtc will be used
+ * cb - callback called when the channel manager is ready
+ */
+export function startManager(socketioUrl?: string, useWebRtc?: boolean, cb?: (cm: ChannelManager)=>void) {
 
-    const server = new SocketioChannel();
-    server.once('connect', () => {
+  const server = new SocketioChannel(socketioUrl);
+  server.once('connect', () => {
 
-      // Use the remote id the socketio server assigns us as our local id
-      const localId = server.getRemoteId();
+    // Use the remote id the socketio server assigns us as our local id
+    const localId = server.getRemoteId();
 
-      const manager = new WrtcChannelManager(new RelayChannelManager(localId, server));
+    let manager: ChannelManager = new RelayChannelManager(localId, server);
+    if (useWebRtc)
+      manager = new WrtcChannelManager(manager);
 
-      const onServerMessage = (msg: Message) => {
-        if (msg.type === 'newPeers') {
-          server.removeListener('message', onServerMessage);
-          for (const id of <string[]>msg.content) {
-            console.log("ID", id, manager);
-            manager.connect(id);
-          }
 
-          cb(manager);
+    const onServerMessage = (msg: Message) => {
+      if (msg.type === 'newPeers') {
+        server.removeListener('message', onServerMessage);
+        for (const id of <string[]>msg.content) {
+          manager.connect(id);
         }
-      };
-      server.on('message', onServerMessage);
 
-      // Ask the server to send us peer ids so we can connect to them
-      server.sendMessage({ type: 'findPeers', content: {} });
-    });
+        if(cb)
+          cb(manager);
+      }
+    };
+    server.on('message', onServerMessage);
 
+    // Ask the server to send us peer ids so we can connect to them
+    server.sendMessage({ type: 'findPeers', content: {} });
+  });
 }

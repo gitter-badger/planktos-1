@@ -106,7 +106,6 @@ export class WrtcChannelManager extends EventEmitter implements ChannelManager {
     this.relay = relay;
 
     relay.on('channel-connect', (c: Channel) => {
-      console.info("IIIIII WRTC FOUND NEW CONN", c);
       this.handleNewRelayChannel(c);
     });
   }
@@ -117,8 +116,10 @@ export class WrtcChannelManager extends EventEmitter implements ChannelManager {
 
 
   connect(remoteId: string) {
-    if (remoteId in this.channels)
-      throw new Error("Already connected to channel: " + remoteId);
+    if (remoteId in this.channels) {
+      console.warn('Already connected to channel: ' + remoteId);
+      return this.channels[remoteId];
+    }
 
     // Set it to null so we know a connection has be started
     this.channels[remoteId] = null;
@@ -130,7 +131,6 @@ export class WrtcChannelManager extends EventEmitter implements ChannelManager {
     if (c.getRemoteId() in this.channels)
       return; // Skip channels we already have
     c.once('message', (msg: Message) => {
-      console.log('IIIIII WRTC RECEIVED RELAY', msg);
       if (msg.type === 'signal') {
         this.initiateWrtcChannel(c, msg.content);
       } else {
@@ -141,11 +141,9 @@ export class WrtcChannelManager extends EventEmitter implements ChannelManager {
 
   private initiateWrtcChannel(relay: Channel, offer?: any) {
     const remoteId = relay.getRemoteId();
-    console.info("IIIIII initiating wrtc channel", offer);
     const wrtc = new WrtcChannel(relay, remoteId, offer);
 
     wrtc.once('connect', () => {
-      console.info('IIIIII WRTC emitting channel-connect');
       this.emit('channel-connect', wrtc);
       relay.disconnect();
       relay = null;

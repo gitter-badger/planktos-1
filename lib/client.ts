@@ -2,7 +2,7 @@ import { ChannelManager, Channel, Message, startManager } from './channel';
 import { EventEmitter } from 'events';
 
 /* Basic data unit that is stored and retrieved on the network */
-class Block {
+export class Block {
   content: any;
   id: string;
 }
@@ -11,7 +11,7 @@ class Block {
  * Peers can send/recveive blocks through their
  * channel (aka connection).
  */
-class Peer {
+export class Peer {
   channel: Channel;
 
   constructor(c: Channel) {
@@ -46,27 +46,24 @@ class Peer {
  *     pulled-blocks(blocks: Block[], path: string) - Array of pulled blocks and their path
  *     connected-peer(p: Peer)                      - A new peer has connected
  */
-export default class Client extends EventEmitter {
+export class Client extends EventEmitter {
   private blockMap: {[i: string]: Block} = {};  // Index by block id
   private blockList: {[i: string]: Block[]} = {'': []};  // Indexed by path
   private channelManager: ChannelManager;
 
   peers: {[i: string]: Peer} = {};
 
-  /* Starts a new client with the given ChannelManager or starts
-   * the default one if none is given */
-  constructor(cm?: ChannelManager) {
+  /* Starts a new client
+   * socketiourl - the url of the socketio server to find peers from
+   * useWebRtc   - indicates if webrtc should be used
+   */
+  constructor(socketioUrl?: string, useWebRtc = true) {
     super();
 
-    const onManagerStart = (cm: ChannelManager) => {
+    startManager(socketioUrl, useWebRtc, cm => {
       this.channelManager = cm;
       this.channelManager.on('channel-connect', (c: Channel) => this.handleNewConnections(c));
-    };
-
-    if (cm)
-      onManagerStart(cm);
-    else
-      startManager(onManagerStart);
+    });
   }
 
   /* Sends the block to every known peer */

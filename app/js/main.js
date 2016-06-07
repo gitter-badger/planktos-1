@@ -1,6 +1,6 @@
 "use strict";
 
-var Client = require('client').default;
+var Client = require('client').Client;
 var client = new Client();
 
 angular.module('app', ['ngMaterial'])

@@ -52,9 +52,10 @@ export class RelayChannelManager extends EventEmitter implements ChannelManager 
   }
 
   connect(remoteId: string) {
-    console.info("IIIIII Initiating connection");
-    if (remoteId in this.channels)
-      throw new Error("Already connected to channel");
+    if (remoteId in this.channels) {
+      console.warn('Already connected to channel: ' + remoteId);
+      return this.channels[remoteId];
+    }
 
     const channel = new RelayChannel(remoteId, (msg: Message) => {
       this.sendRelay(remoteId, msg);
@@ -69,7 +70,6 @@ export class RelayChannelManager extends EventEmitter implements ChannelManager 
 
     // Delay emit until after caller has chance to set listener
     setTimeout(() => {
-      console.info("IIIIII Emitting connect");
       channel.emit('connect')
       this.emit('channel-connect', channel);
     });
@@ -101,14 +101,12 @@ export class RelayChannelManager extends EventEmitter implements ChannelManager 
     if (fromId in this.channels) {
       this.channels[fromId].emit('message', msg);
     } else {
-      console.info("IIIIII received relay from new peer", msg);
       const c = this.connect(fromId);
       this.channels[fromId] = c;
       c.once('connect', () => {
         // Delay emit so listeners of 'channel-connct' can set listeners
         // for this event
         setTimeout(() => {
-          console.info("IIIIII handling connect. emitting new message", msg);
           c.emit('message', msg);
         });
       });

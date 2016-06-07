@@ -6,7 +6,6 @@ import { Message } from './channel';
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
-const port = 8000;
 const peers: string[] = [];
 
 // Serve static content from the `app`
@@ -47,20 +46,22 @@ function findPeers(socket: SocketIO.Socket) {
     content: peerList
   };
   socket.send(msg);
-};
+}
 
 function relayToPeer(socket: SocketIO.Socket, msg: Message) {
   if (io.sockets.connected[msg.content.toId]) {
     io.sockets.connected[msg.content.toId].send(msg);
   }
-};
+}
 
-export function startServer() {
+export function startServer(cb: (s:http.Server)=>void, port=0) {
   server.listen(port, function(){
-    console.log('listening on *:' + port);
+    console.log('listening on *:' + server.address().port);
+    if (cb)
+      cb(server);
   });
-};
+}
 
 if (require.main === module) {
-  startServer();
+  startServer(undefined, 8000);
 }
