@@ -1,7 +1,7 @@
 import { ok, equal } from 'assert';
 import { Peer, Client, normalizePath } from '../lib/client';
 import { startManager } from '../lib/channel';
-import { startServer } from '../lib/server';
+import { startServer } from '../server';
 import { Server } from 'http';
 
 function createPeer(server: Server) {

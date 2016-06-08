@@ -1,7 +1,7 @@
 import * as socketio from 'socket.io';
 import * as http from 'http';
 import * as express from 'express';
-import { Message } from './channel';
+import { Message } from '../lib/channel';
 
 const app = express();
 const server = http.createServer(app);

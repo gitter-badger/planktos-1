@@ -5,16 +5,10 @@ const ts = require('gulp-typescript');
 const clean = require('gulp-clean');
 const nodemon = require('gulp-nodemon');
 
-const tsTests = ts.createProject({
-  outDir: 'build/test',
+const tsProj = ts.createProject({
+  outDir: 'build',
   noImplicitAny: true
 });
-
-const tsLib = ts.createProject({
-  outDir: 'build/lib',
-  noImplicitAny: true
-});
-
 
 gulp.task('clean', function() {
   return gulp.src('build', { 'read': false }).pipe(clean());
@@ -25,7 +19,7 @@ gulp.task('copy', function() {
   gulp.src('app/**/*').pipe(gulp.dest('build/app'));
 });
 
-gulp.task('browserify', ['build-lib'], function() {
+gulp.task('browserify', ['tsc'], function() {
   return browserify()
   .require('./build/lib/client.js', { expose: 'client' })
   .bundle()
@@ -36,23 +30,16 @@ gulp.task('browserify', ['build-lib'], function() {
 gulp.task('serve', ['build'], function() {
   gulp.watch('lib/**/*.ts', ['build']);
   gulp.watch('app/**/*', ['build']);
-  nodemon({ script: 'build/lib/server.js', watch: 'build/lib' });
+  gulp.watch('server/**/*', ['build']);
+  nodemon({ script: 'build/server', watch: ['build/lib', 'build/server'] });
 });
 
-gulp.task('build-lib', function() {
-  return gulp.src(['lib/**/*.ts', 'typings/index.d.ts'])
-    .pipe(ts(tsLib))
-    .pipe(gulp.dest('build/lib'));
+gulp.task('tsc', function() {
+  return gulp.src(['test/**/*.ts', 'server/**/*.ts', 'lib/**/*.ts', 'typings/index.d.ts'])
+    .pipe(ts(tsProj))
+    .pipe(gulp.dest('build'));
 });
 
-gulp.task('build-tests', function() {
-    return gulp.src(['test/**/*.ts', 'typings/index.d.ts'])
-      .pipe(ts(tsTests))
-      .pipe(gulp.dest('build'));
-});
-
-gulp.task('build-app', ['browserify', 'copy']);
-
-gulp.task('build', ['build-lib', 'build-app', 'build-tests']);
+gulp.task('build', ['tsc', 'browserify', 'copy']);
 
 gulp.task('default', ['serve']);
