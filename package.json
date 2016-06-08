@@ -18,7 +18,7 @@
   "license": "MIT",
   "scripts": {
     "start": "gulp",
-    "test": "gulp build-lib && gulp build-tests && mocha build/test --use-strict",
+    "test": "gulp tsc && mocha build/test --use-strict",
     "postinstall": "bower install; typings install",
     "gulp": "gulp",
     "typings": "typings",
