@@ -1,6 +1,7 @@
 # Planktos
 
 [![Join the chat at https://gitter.im/xuset/planktos](https://badges.gitter.im/xuset/planktos.svg)](https://gitter.im/xuset/planktos?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://travis-ci.org/xuset/planktos.svg?branch=master)](https://travis-ci.org/xuset/planktos)
 
 Planktos is a library for building p2p web applications. A simple push/pull interface is provided for storing and retreiving data in a distributed way; so all the data is stored on the peers visiting the website and not on any servers. The code is in an early alpha state so there are bound to be bugs and inefficiencies. If you want to help out, join us on [gitter](https://gitter.im/xuset/planktos) or try out our live demo at [chatter.planktos.xyz](http://chatter.planktos.xyz).
 
