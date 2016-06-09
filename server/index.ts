@@ -54,14 +54,15 @@ function relayToPeer(socket: SocketIO.Socket, msg: Message) {
   }
 }
 
-export function startServer(cb: (s:http.Server)=>void, port=0) {
-  server.listen(port, function(){
-    console.log('listening on *:' + server.address().port);
-    if (cb)
-      cb(server);
+export function startServer(port=0) {
+  return new Promise<http.Server>(resolve =>{
+    server.listen(port, function(){
+      console.log('listening on *:' + server.address().port);
+      resolve(server);
+    });
   });
 }
 
 if (require.main === module) {
-  startServer(undefined, 8000);
+  startServer(8000);
 }

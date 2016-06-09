@@ -1,49 +1,46 @@
 import { ok, equal } from 'assert';
 import { Peer, Client, normalizePath } from '../lib/client';
-import { startManager } from '../lib/channel';
 import { startServer } from '../server';
 import { Server } from 'http';
+import { start, stop, TestNet, startPeer } from './utils';
 
-function createPeer(server: Server) {
-  const url = "http://localhost:" + server.address().port;
-  // don't use webrtc. set to false for testing because webrtc
-  // support in nodejs is... tricky...
-  return new Client(url, false);
-}
-
-describe('sanity tests', function() {
-
-  let server: Server;
+describe('peer tests', function() {
+  const peerCount = 2;
+  let testnet: TestNet;
 
   before(function(done) {
-    startServer(s => {
-      server = s;
+    start(peerCount).then(t => {
+      testnet = t;
       done();
     });
   });
 
-  after(function() {
-    server.close();
-    server.unref();
+  it('all peers connect to everyone else', function() {
+    for (let p of testnet.peers) {
+      equal(peerCount - 1, Object.keys(p.peers).length);
+    }
   });
 
-  it('peer connect', function(done) {
-    const clientA = createPeer(server);
-    const clientB = createPeer(server);
-
-    const onPeer = (peer: Peer) => {
-      const peersA = Object.keys(clientA.peers);
-      const peersB = Object.keys(clientB.peers);
-      ok(peersA.length <= 1 && peersB.length <= 1);
-      if (peersA.length == 1 && peersB.length == 1) {
+  it('new peer automatically connects to net', function(done) {
+    let count = 0;
+    const onPeerConnect = () => {
+      count++;
+      ok(count <= 2 * peerCount);
+      if (count == 2 * peerCount)
         done();
-      }
     };
-
-    clientA.on('connected-peer', onPeer);
-    clientB.on('connected-peer', onPeer);
+    for (let p of testnet.peers)
+      p.on('connected-peer', onPeerConnect);
+    const newPeer = startPeer(testnet);
+    newPeer.on('connected-peer', onPeerConnect);
   });
 
+  after(function() {
+    stop(testnet);
+  });
+});
+
+describe('utility tests', function() {
   it('normalize path test', function() {
     let path = '/a////a/a/a///////asdfadsf////asdfasdf//////asdfasdf//';
     path = normalizePath(path);
