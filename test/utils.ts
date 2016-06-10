@@ -1,27 +1,48 @@
 import { Client } from '../lib/client';
-import { startServer } from '../server';
-import { Server } from 'http';
+import { Server } from '../server';
 
 export interface TestNet {
   server: Server;
   peers: Client[];
 }
 
-export function start(numPeers: number, waitForConnect = true): Promise<TestNet> {
+type DoneFunc = (e?: any)=>void;
+type TestFunc = (t: TestNet, done:DoneFunc)=>void;
+
+export function setupNet(testFunc: TestFunc, numPeers: number, waitForConnect = true) {
+
+  return function() {
+    return startNet(numPeers, waitForConnect)
+      .then(testnet => {
+        return new Promise((resolve, reject) => {
+
+          const doneIntercept = (e?: any) => {
+            stopNet(testnet);
+            if (e)
+              reject(e);
+            else
+              resolve();
+          };
+
+          testFunc(testnet, doneIntercept);
+        });
+      });
+  };
+}
+
+export function startNet(numPeers: number, waitForConnect = true): Promise<TestNet> {
   let testnet: TestNet = {
-    server: undefined,
+    server: new Server(),
     peers: [],
   };
 
-  return startServer()
-    .then(s => testnet.server = s)
+  return testnet.server.listen()
     .then(() => startPeers(testnet, numPeers, waitForConnect))
     .then(() => Promise.resolve(testnet));
 }
 
-export function stop(testnet: TestNet) {
-  testnet.server.close();
-  testnet.server.unref();
+export function stopNet(testnet: TestNet) {
+  testnet.server.destroy();
 }
 
 export function startPeer(testnet: TestNet) {
@@ -44,7 +65,6 @@ export function startPeers(testnet: TestNet, count: number, waitForConnect = tru
   return new Promise(resolve => {
 
     const onPeerConnect = () => {
-      console.log("CONNECTED", Object.keys(testnet.peers[0].peers), Object.keys(testnet.peers[1].peers));
       let allConnected = true;
       for (const p of testnet.peers) {
         if (Object.keys(p.peers).length !== testnet.peers.length - 1) {

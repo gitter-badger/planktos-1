@@ -102,7 +102,6 @@ export class RelayChannelManager extends EventEmitter implements ChannelManager 
       this.channels[fromId].emit('message', msg);
     } else {
       const c = this.connect(fromId);
-      this.channels[fromId] = c;
       c.once('connect', () => {
         // Delay emit so listeners of 'channel-connct' can set listeners
         // for this event
