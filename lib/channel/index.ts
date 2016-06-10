@@ -69,14 +69,14 @@ export function startManager(socketioUrl?: string, useWebRtc?: boolean, cb?: (cm
         for (const id of <string[]>msg.content) {
           manager.connect(id);
         }
-
-        if(cb)
-          cb(manager);
       }
     };
     server.on('message', onServerMessage);
 
     // Ask the server to send us peer ids so we can connect to them
     server.sendMessage({ type: 'findPeers', content: {} });
+
+    if (cb)
+      cb(manager);
   });
 }
