@@ -40,6 +40,8 @@ gulp.task('tsc', function() {
     .pipe(gulp.dest('build'));
 });
 
+gulp.task('build-lib', ['tsc']);
+
 gulp.task('build', ['tsc', 'browserify', 'copy']);
 
 gulp.task('default', ['serve']);
