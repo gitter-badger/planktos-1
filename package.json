@@ -1,8 +1,8 @@
 {
   "name": "planktos",
   "description": "A p2p take on the web",
-  "version": "0.0.0",
-  "homepage": "https://github.com/xuset/planktos",
+  "version": "0.0.1",
+  "homepage": "http://www.planktos.xyz",
   "keywords": [
     "planktos",
     "p2p",
@@ -15,6 +15,7 @@
     "name": "Austin Middleton",
     "email": "austinmid@utexas.edu"
   },
+  "repository": "https://github.com/xuset/planktos",
   "license": "MIT",
   "scripts": {
     "start": "gulp",
