@@ -1,5 +1,7 @@
 # Planktos
 
+[![Join the chat at https://gitter.im/planktos-xyz/planktos](https://badges.gitter.im/planktos-xyz/planktos.svg)](https://gitter.im/planktos-xyz/planktos?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 [![Join the chat at https://gitter.im/xuset/planktos](https://badges.gitter.im/xuset/planktos.svg)](https://gitter.im/xuset/planktos?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://travis-ci.org/xuset/planktos.svg?branch=master)](https://travis-ci.org/xuset/planktos)
 
